@@ -1,10 +1,46 @@
 # audio-aigc-lab
 
-> 音频信号分析、特征工程与音频生成 / 编辑复现实践。
-> 作者：伍浩然（[@StreakyRan](https://github.com/StreakyRan)）
+**音频信号分析 · 特征工程 · 数据清洗流水线 · 音乐生成与源分离实测**
 
-本仓库记录我在音频 AIGC 方向上的动手实践：**音频特征提取链路**、**音频数据清洗流水线**、**音乐生成与源分离复现**。
-每个实验都附**实际运行日志与实测数字**（帧率、矩阵形状、显存、耗时），所有结论均可复现。
+[![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.11-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
+[![librosa](https://img.shields.io/badge/librosa-1.0-8B5CF6)](https://librosa.org/)
+[![GPU](https://img.shields.io/badge/GPU-RTX%203050%204GB-76B900?logo=nvidia&logoColor=white)]()
+[![License](https://img.shields.io/badge/数据许可-CC%20%E4%B8%8E%20research--only-important)]()
+
+作者：伍浩然（[@StreakyRan](https://github.com/StreakyRan)）
+
+本仓库记录我在音频 AIGC 方向上的动手实践。**每个实验都附实际运行日志与实测数字**（帧率、矩阵形状、显存、RTF、precision/recall），所有结论均可复现。
+
+> 💡 **设计原则**：不写"我跑通了"，只写"跑出了什么数字、遇到了什么问题、怎么修正的"。
+> 其中两个实验的**初始假设被数据推翻**，修正过程保留在报告中。
+
+---
+
+## 📊 结果总览
+
+| # | 实验 | 核心实测指标 | 硬件约束 |
+|---|---|---|---|
+| **01** | 音频信号分析与特征提取 | STFT 矩阵 **1025×460**、帧率 **86.1 fps**、频率分辨率 21.5 Hz、MFCC **39 维**、c0 与其他系数量级差 **18.5×** | CPU |
+| **02** | 音频数据清洗与打标流水线 | 4 类缺陷检测器 **precision = recall = 1.000**、吞吐 **36.2× 实时**（180.4s → 4.99s） | CPU |
+| **03-1** | MusicGen 文本到音乐推理 | 586.9 M 参数、**RTF 1.18–1.57×**、显存峰值 **1.25 GB** | RTX 3050 **4 GB** |
+| **03-2** | Demucs v4 音乐源分离 | 42 M 参数、**9.7× 实时**、显存峰值 **0.59 GB**、重建 SNR **12.69 dB** | RTX 3050 **4 GB** |
+| **03-3** | stem 级编辑与相位一致性 | 逐 stem 与整轨处理的相位一致性**相差 8.42 dB**（反直觉结果） | CPU |
+
+---
+
+## 📑 目录
+
+- [环境](#环境)
+- [01 音频信号分析与特征提取](#01-音频信号分析与特征提取)
+- [02 音频数据清洗与打标流水线](#02-音频数据清洗与打标流水线)
+- [03 音乐生成与源分离复现](#03-音乐生成与源分离复现)
+  - [03-1 文本到音乐生成（MusicGen-small）](#03-1-文本到音乐生成musicgen-small-)
+  - [03-2 音乐源分离（Demucs v4）](#03-2-音乐源分离demucs-v4-)
+  - [03-3 stem 级编辑与相位一致性实验](#03-3-stem-级编辑与相位一致性实验-)
+- [复现说明](#复现说明)
+- [说明与边界](#说明与边界)
+- [参考](#参考)
 
 ---
 
@@ -20,11 +56,17 @@ audio-aigc-lab/
 │       ├── h1_audio_analysis.png
 │       ├── h1_mfcc39.npy
 │       └── h1_run_log.txt
-├── 02_data_pipeline/           # 音频数据清洗与打标流水线（待补）
-│   └── audio_clean.py
-└── 03_music_gen_edit/          # 音乐生成与源分离复现（待补）
-    ├── musicgen_infer.py
-    └── demucs_separate.py
+├── 02_data_pipeline/           # 音频数据清洗与打标流水线
+│   ├── make_messy_audio.py         # 构造受控脏数据（产出 ground truth）
+│   ├── calibrate_hf_threshold.py   # 高频能量比阈值标定
+│   ├── audio_clean.py              # 五层清洗主流程
+│   ├── manifest.jsonl              # 逐文件 manifest
+│   └── h5_clean_report.md
+└── 03_music_gen_edit/          # 音乐生成与源分离复现
+    ├── musicgen_infer.py           # MusicGen-small 推理实测
+    ├── demucs_separate.py          # Demucs v4 源分离
+    ├── stem_edit.py                # stem 级编辑 + 相位实验
+    └── outputs/                    # 生成的音频与 stems
 ```
 
 ---
@@ -99,6 +141,14 @@ python h1_audio_analysis.py "your_audio.wav"
 ![audio analysis](01_audio_analysis/results/h1_audio_analysis.png)
 
 自下而上依次为：波形 → log-Mel 谱 → MFCC 13 维（含 c0）→ MFCC 12 维（丢 c0）→ 响度曲线 + LUFS 参考线。
+
+**我学到什么**：
+
+- **帧率只由 `hop_length` 决定，与 `n_fft` 无关**（`时长 × 帧率 ≈ 帧数` 可以直接验算）。
+- **"为什么丢 c0"不是背下来的**：我把含 c0 与不含 c0 的 MFCC 画在一起，
+  发现 c0 量级大 18.5 倍、把其他系数完全压平 —— 这个可视化本身就是证据。
+- **特征工程的核心是参数一致性**：不同库的 mel 实现（HTK vs Slaney）会导致特征分布不一致，
+  所以参数必须固化进配置，不能依赖默认值。
 
 ---
 
@@ -233,6 +283,13 @@ python musicgen_infer.py          # 需设置 HF_HOME 到大容量磁盘
 
 **产出**：`outputs/h8_prompt{1,2,3}.wav`、`h8_benchmark.md`、`h8_run_log.txt`
 
+**我学到什么**：
+
+- **4 GB 显存不是跑不动生成模型的门槛**：586.9 M 参数 fp16 下权重仅约 1.17 GB，
+  实测峰值 1.25 GB —— 限制来自**自回归逐 token 的串行特性**（RTF > 1），不是显存。
+- **响度是生成音频必须处理的工程问题**：同一配置下三条 prompt 的输出峰值差 3 倍（0.174 vs 0.539），
+  直接进入评估或二次使用会造成不公平比较。
+
 ### 03-2 音乐源分离（Demucs v4 / htdemucs）✅
 
 **目标**：把混音拆成 4 条 stem，并量化分离保真度与硬件开销。
@@ -309,6 +366,53 @@ python stem_edit.py
 
 **产出**：`outputs/stems/`（4 条 stem + mixture）、`outputs/edit/`（编辑结果 + 残差）、
 `h9_separation_report.md`、`h9_edit_report.md`、`h9_metrics.json`、`h9_edit_metrics.json`
+
+**我学到什么**：
+
+- **"分离"是近似分解**：stems 之和与原始混音只有 12.69 dB SNR —— 这个残差就是所有 stem 级编辑问题的源头。
+- **实验假设被数据推翻时，应该改结论而不是改数据**：我原本预期"逐 stem 处理更差"，
+  实测相反（差 8.42 dB），于是重新解释并在报告中如实记录。
+- **方法学比结论更重要**：第一版实验因为"两条路径时间尺度不同"而无法比较，
+  改成**往返设计**后才得到可信数字 —— 这个修正过程本身比结果更有价值。
+
+---
+
+## 复现说明
+
+### 环境
+
+```bash
+pip install -r requirements.txt
+```
+
+> 生成 / 分离相关实验还需：`torch torchaudio transformers accelerate demucs`
+> HuggingFace 缓存建议指向大容量磁盘：`set HF_HOME=D:\hf_cache`
+
+### 一键复现（按顺序）
+
+```bash
+# 01 音频信号分析（CPU，约 30 秒）
+cd 01_audio_analysis
+python h1_audio_analysis.py                      # 不给参数则用 librosa 示例音频
+
+# 02 数据清洗流水线（CPU，约 15 秒）
+cd ../02_data_pipeline
+python make_messy_audio.py                       # 生成受控脏数据 + ground truth
+python calibrate_hf_threshold.py                 # 标定高频能量比阈值（看数据分布）
+python audio_clean.py                            # 跑五层清洗 + 检测器验证
+
+# 03 音乐生成与分离（GPU，首次需下载权重约 1.5 GB）
+cd ../03_music_gen_edit
+python musicgen_infer.py                         # MusicGen-small 推理实测
+python demucs_separate.py                        # Demucs v4 源分离
+python stem_edit.py                              # stem 编辑 + 相位一致性实验
+```
+
+### 复现性说明
+
+- 所有脚本输出**机器可读的指标文件**（`*.json`）与**运行日志**（`*_log.txt`），便于逐项对照。
+- 脏数据构造使用固定随机种子（`numpy.random.default_rng(42)`），缺陷注入位置与强度可复现。
+- 数据清洗的阈值全部以常量显式声明在 `audio_clean.py` 顶部，便于调参与审计。
 
 ---
 
