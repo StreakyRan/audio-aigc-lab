@@ -1,0 +1,81 @@
+{
+  "align": {
+    "vocals": {
+      "lag_samples": 259,
+      "lag_ms": 5.873015873015873
+    },
+    "drums": {
+      "lag_samples": 0,
+      "lag_ms": 0.0
+    },
+    "bass": {
+      "lag_samples": 0,
+      "lag_ms": 0.0
+    },
+    "other": {
+      "lag_samples": -5,
+      "lag_ms": -0.11337868480725624
+    }
+  },
+  "reconstruction": {
+    "mae": 0.014557963237166405,
+    "snr_db": 12.691801071166992
+  },
+  "pathA": {
+    "rms_db": -16.058265686035156,
+    "peak": 1.2649869918823242,
+    "lufs": -13.946484705861767,
+    "mae_vs_ref": 0.025992682203650475,
+    "corr_vs_ref": 0.917634904384613,
+    "snr_vs_ref_db": 6.676126480102539,
+    "lag_samples": 0
+  },
+  "pathB": {
+    "rms_db": -24.873645782470703,
+    "peak": 0.5874114036560059,
+    "lufs": -23.201917946390527,
+    "mae_vs_ref": 0.09287374466657639,
+    "corr_vs_ref": 0.18441082537174225,
+    "snr_vs_ref_db": -1.7417712211608887,
+    "lag_samples": -155
+  },
+  "pathC": {
+    "rms_db": -15.37031364440918,
+    "peak": 1.596588134765625,
+    "lufs": -13.571404292243685,
+    "mae_vs_ref": 0.0,
+    "corr_vs_ref": 1.0,
+    "snr_vs_ref_db": Infinity,
+    "lag_samples": 0
+  },
+  "exports": [
+    {
+      "file": "edit_pathA_per_stem_roundtrip.wav",
+      "lufs_before": -13.946484705861767,
+      "gain_db": -2.1290173984398137,
+      "lufs_after": -16.07550232528807,
+      "peak": 0.9900000095367432
+    },
+    {
+      "file": "edit_pathB_whole_mix_roundtrip.wav",
+      "lufs_before": -23.201917946390527,
+      "gain_db": 4.533856484056959,
+      "lufs_after": -18.66806142820217,
+      "peak": 0.9900000095367432
+    },
+    {
+      "file": "edit_pathC_sum_of_stems.wav",
+      "lufs_before": -13.571404292243685,
+      "gain_db": -4.151153309404673,
+      "lufs_after": -17.72255827800743,
+      "peak": 0.9900000095367432
+    },
+    {
+      "file": "edit_residual.wav",
+      "lufs_before": -28.32501813539822,
+      "gain_db": 0.8084554224354022,
+      "lufs_after": -27.516562375516493,
+      "peak": 0.9900000095367432
+    }
+  ]
+}

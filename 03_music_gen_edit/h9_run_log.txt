@@ -1,0 +1,51 @@
+﻿python : Downloading file 'admiralbob77_-_Choice_-_Drum-bass.ogg' from 
+'https://librosa.org/data/audio/admiralbob77_-_Choice_-_Drum-bass.ogg' to 
+'C:\Users\���Ȼ\AppData\Local\librosa\librosa\Cache'.
+所在位置 行:3 字符: 1
++ python demucs_separate.py 2>&1 | Out-File -Encoding utf8 "h9_run_log. ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Downloading fil...librosa\Cache'.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits 
+and faster downloads.
+==================================================================
+输入      : C:\Users\伍浩然\AppData\Local\librosa\librosa\Cache\admiralbob77_-_Choice_-_Drum-bass.ogg
+模型      : htdemucs
+设备      : cuda  (NVIDIA GeForce RTX 3050 Laptop GPU)
+显存可用  : 3.23 GB / 4.00 GB
+==================================================================
+
+[input] 采样率 44100 Hz | 声道 2 | 时长 25.03s
+[model] 加载 16.9s | 参数量 42.0M (41,984,456)
+
+  0%|                                                                                  | 0.0/29.25 [00:00<?, 
+?seconds/s]
+ 20%|������������������������������                                                          | 5.85/29.25 
+[00:01<00:05,  4.65seconds/s]
+ 40%|������������������������������������������������������������                                           | 
+11.7/29.25 [00:01<00:02,  8.73seconds/s]
+ 60%|������������������������������������������������������������������������                       | 
+17.549999999999997/29.25 [00:01<00:00, 12.10seconds/s]
+ 80%|������������������������������������������������������������������������������������������������������������������
+����              | 23.4/29.25 [00:02<00:00, 14.79seconds/s]
+100%|������������������������������������������������������������������������������������������������������������������
+������������������������������| 29.25/29.25 [00:02<00:00, 16.93seconds/s]
+100%|������������������������������������������������������������������������������������������������������������������
+������������������������������| 29.25/29.25 [00:02<00:00, 12.74seconds/s]
+
+[separate] 耗时 2.58s | 音频时长 25.03s | 实时倍速 9.70x | 显存峰值 0.59 GB
+
+各 stem 统计：
+  stem            RMS     Peak       能量占比
+  drums       0.06726    0.947      15.8%
+  bass        0.15121    0.949      80.0%
+  other       0.03332    0.877       4.0%
+  vocals      0.00785    0.942       0.2%
+
+重建检查（4 条 stem 之和 vs 原始混音）：
+  MAE = 0.01455 | SNR = 12.69 dB
+
+[done] stems -> C:\Users\伍浩然\OneDrive\Desktop\ForInterview\SkillsetLab\github_repo\audio-aigc-lab\03_music_gen_edit\outputs\stems\choice_drumbass
+[done] 报告 -> h9_separation_report.md | 指标 -> h9_metrics.json
+==================================================================

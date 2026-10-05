@@ -1,0 +1,47 @@
+﻿==================================================================
+stems 目录 : C:\Users\伍浩然\OneDrive\Desktop\ForInterview\SkillsetLab\github_repo\audio-aigc-lab\03_music_gen_edit\outputs\stems\choice_drumbass
+==================================================================
+长度 1103646 样本 (25.03s) | 声道 2
+
+【① 对齐检查】各 stem 与混音的时域互相关峰值偏移
+  vocals   偏移   +259 样本 (+5.873 ms)
+  drums    偏移     +0 样本 (+0.000 ms)
+  bass     偏移     +0 样本 (+0.000 ms)
+  other    偏移     -5 样本 (-0.113 ms)
+
+【② 复混路径对比】
+  stems 之和 vs 原始混音：MAE = 0.01456 | SNR = 12.69 dB
+  残差 RMS            ：-31.5 dB
+  → 残差不为零说明源分离是「近似分解」，这是后续编辑产生抵消问题的根源
+
+【③ 相位问题实测】变速往返一致性：rate → 1/rate
+    设计说明：为避免「时间尺度不同导致无法比较」，本实验采用往返设计——
+    先按 rate 变速再按 1/rate 变回，理想情况下应恢复原信号；
+    恢复得越差，说明相位破坏越严重。
+
+  路径                                            峰值     LUFS      相关性   SNR(dB)
+  A 逐 stem 往返后复混                             1.265   -13.95    0.918      6.68
+  B 整轨往返（保持相对相位）                             0.587   -23.20    0.184     -1.74
+  C 不变速原始复混（基准）                              1.597   -13.57    1.000       inf
+
+  关键结论（⚠️ 与直觉相反，以实测为准）：
+  · 路径 A（逐 stem 往返）与基准：相关性 0.918、SNR 6.68 dB
+  · 路径 B（整轨往返）与基准  ：相关性 0.184、SNR -1.74 dB
+  · 本条件下恢复更好的是路径 A，差距 8.42 dB
+  · 解释：phase vocoder 对『成分复杂的混音』相位修改更难恢复，单个 stem 成分简单反而更稳；
+    这说明『逐 stem 处理一定更差』是错的——是否逐 stem 处理取决于操作类型：
+    · 只改某一个 stem（替换鼓组/给贝斯加效果）→ 逐 stem 是正确的；
+    · 整体变速/改时长 → 应直接处理整轨，而不是分别处理各 stem 再求和；
+    · 必须分别处理时 → 复混前必须做互相关对齐补偿。
+  · 附带发现：路径 B 的 SNR 为负，说明 phase vocoder 大幅变速本身会显著劣化音质，
+    工程上应优先用更高质量的算法（如 Rubber Band）或避免反复变速。
+
+【④ 导出编辑结果】
+  edit_pathA_per_stem_roundtrip.wav            LUFS  -13.95 ->  -16.08  (增益 -2.1 dB)
+  edit_pathB_whole_mix_roundtrip.wav           LUFS  -23.20 ->  -18.67  (增益 +4.5 dB)
+  edit_pathC_sum_of_stems.wav                  LUFS  -13.57 ->  -17.72  (增益 -4.2 dB)
+  edit_residual.wav                            LUFS  -28.33 ->  -27.52  (增益 +0.8 dB)
+
+[done] 编辑结果 -> C:\Users\伍浩然\OneDrive\Desktop\ForInterview\SkillsetLab\github_repo\audio-aigc-lab\03_music_gen_edit\outputs\edit
+[done] 报告 -> h9_edit_report.md | 指标 -> h9_edit_metrics.json
+==================================================================
