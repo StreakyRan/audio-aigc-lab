@@ -1,4 +1,4 @@
-# 音频 / Python
+﻿# 音频 / Python
 __pycache__/
 *.py[cod]
 *.npy
@@ -31,3 +31,4 @@ Thumbs.db
 # 例外：结果目录里保留的小文件和图片
 !01_audio_analysis/results/*.npy
 !01_audio_analysis/results/*.png
+!03_music_gen_edit/outputs/*.wav

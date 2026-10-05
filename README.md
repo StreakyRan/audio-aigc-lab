@@ -118,12 +118,58 @@ python h1_audio_analysis.py "your_audio.wav"
 
 ## 03 音乐生成与源分离复现
 
+### 03-1 文本到音乐生成（MusicGen-small）✅
+
+**目标**：在消费级笔记本 GPU（4 GB 显存）上跑通文本到音乐推理，量化耗时与显存占用。
+
+**运行**：
+
+```bash
+cd 03_music_gen_edit
+python musicgen_infer.py          # 需设置 HF_HOME 到大容量磁盘
+```
+
+**实测环境与结果**：
+
+| 项 | 数值 |
+|---|---|
+| GPU | NVIDIA GeForce RTX 3050 Laptop（**4 GB**，实际可用约 3.2 GB） |
+| 精度 | **fp16** |
+| 模型 | facebook/musicgen-small，**586.9 M 参数** |
+| 模型加载耗时 | **139.3 s**（含首次权重下载） |
+| 输出采样率 | **32 kHz** |
+| 生成配置 | `max_new_tokens=200`（≈4 秒）、`guidance_scale=3.0` |
+| **显存峰值** | **1.25 GB** |
+
+| # | Prompt | 时长 (s) | 生成耗时 (s) | **RTF** | 峰值 | RMS |
+|---|---|---|---|---|---|---|
+| 1 | lo-fi hip hop with warm piano, soft vinyl crackle, mellow drums | 3.94 | 6.2 | **1.57×** | 0.446 | 0.0478 |
+| 2 | cinematic orchestral strings with slow build up and deep bass | 3.94 | 4.6 | **1.18×** | 0.174 | 0.0456 |
+| 3 | gentle acoustic guitar fingerpicking, calm and intimate | 3.94 | 4.8 | **1.21×** | 0.539 | 0.0955 |
+
+> **RTF（real-time factor）= 生成耗时 / 音频时长**。实测 1.18–1.57×，即生成 4 秒音乐需 5–6 秒，
+> 属于消费级 GPU 上的正常水平。受 4 GB 显存限制，此处仅生成约 4 秒片段作对比，
+> 官方通常评估 10–30 秒时长。
+
+**关键观察**：
+
+1. **显存不是瓶颈，速度才是**：586.9 M 参数在 fp16 下权重仅占约 1.17 GB，
+   实际显存峰值 1.25 GB —— 说明 4 GB 显存足以运行 small 版本，限制主要来自自回归逐 token 生成的串行特性。
+2. **RTF 与 prompt 无关但随机性明显**：同一配置下三条 prompt 的生成耗时在 4.6–6.2 s 之间波动，
+   符合 `do_sample=True` 采样路径的特征。
+3. **峰值与 RMS 差异显著**（peak 0.174 vs 0.539）：三条 prompt 的输出响度差异较大，
+   再次说明**生成音频在进入评估或二次使用前需要做响度归一化**。
+
+**产出**：`outputs/h8_prompt{1,2,3}.wav`、`h8_benchmark.md`、`h8_run_log.txt`
+
+### 03-2 音乐源分离与 stem 级编辑
+
 > 状态：**待补**
 
 计划实现：
 
-- MusicGen-small 文本到音乐推理，记录采样耗时与显存峰值
-- Demucs v4 音乐源分离（vocals / drums / bass / other）与 stem 级编辑
+- Demucs v4 音乐源分离（vocals / drums / bass / other）
+- stem 级编辑（替换 / 变速对齐后重混）
 - FAD / CLAP score 客观评估 + 人工听测记录
 
 ---
