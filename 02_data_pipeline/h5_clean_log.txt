@@ -1,0 +1,47 @@
+﻿============================================================================================================
+音频清洗流水线 | 输入 10 个文件 | 目标采样率 44100 Hz | 目标响度 -16.0 LUFS
+============================================================================================================
+file                      sr_in  dur_in    clip   silR      DC   BW(Hz)    LUFS LUFS_out dur_out   status reasons
+------------------------------------------------------------------------------------------------------------
+s01_clean_choice.wav      44100  20.00s 0.00000  0.142 -0.0001     4974  -23.08  -20.24  20.00s     KEEP 
+s02_clean_waltz.wav       44100  20.00s 0.00000  0.001 -0.0003     1766  -18.72  -16.00  20.00s     KEEP 
+s03_clean_ragtime.wav     22050  20.00s 0.00000  0.003 -0.0000     2347  -21.51  -18.68  20.00s     KEEP 
+s04_clipped_choice.wav    44100  20.00s 0.00312  0.142 -0.0003     5060  -19.73  -20.00  20.00s   REJECT hard_clipping
+s05_silence_waltz.wav     48000  20.00s 0.00000  0.348 -0.0001     1809  -21.34  -18.12  20.00s   REJECT excessive_silence
+s06_dc_ragtime.wav        44100  20.00s 0.00000  0.000  0.0500     2089  -21.51  -18.68  20.00s   REJECT dc_offset
+s07_lowpass_choice.wav    44100  20.00s 0.00000  0.161 -0.0001      883  -23.25  -18.79  20.00s  FLAGGED 
+s08_noisy_waltz.wav       16000  20.00s 0.00000  0.000 -0.0002     2735  -18.67  -16.11  20.00s  FLAGGED 
+s09_short_ragtime.wav     44100   0.40s 0.00000  0.171 -0.0001     2692  -20.96  -16.00   0.40s   REJECT too_short
+s10_multi_choice.wav      44100  20.00s 0.00237  0.348 -0.0003    13264  -18.65  -18.91  20.00s   REJECT hard_clipping,excessive_silence
+
+============================================================================================================
+清洗统计
+============================================================================================================
+  总文件数      : 10
+  保留(clean)   : 3
+  标记(flagged) : 2   （有缺陷但被修复后保留）
+  剔除(reject)  : 5
+  剔除原因分布  : {'hard_clipping': 2, 'excessive_silence': 2, 'dc_offset': 1, 'too_short': 1}
+  输入总时长    : 180.40s  ->  输出总时长 180.40s  (压缩 0.0%)
+  处理耗时      : 4.99s  （吞吐 36.2x 实时）
+
+检测器 vs Ground Truth（精度 / 召回）
+  defect         TP   FP   FN   TN  precision   recall
+  clipping        2    0    0    8      1.000    1.000
+  silence         2    0    0    8      1.000    1.000
+  dc_offset       1    0    0    9      1.000    1.000
+  lowpass         1    1    0    8      0.500    1.000
+  short           1    0    0    9      1.000    1.000
+
+各检测器命中的文件（用于人工复核 FP 是否为真实缺陷）
+  clipping     -> ['s04_clipped_choice.wav', 's10_multi_choice.wav']
+  silence      -> ['s05_silence_waltz.wav', 's10_multi_choice.wav']
+  dc_offset    -> ['s06_dc_ragtime.wav']
+  lowpass      -> ['s07_lowpass_choice.wav', 's08_noisy_waltz.wav']
+  short        -> ['s09_short_ragtime.wav']
+
+[done] manifest  -> manifest.jsonl (10 条)
+[done] 报告      -> h5_clean_report.md
+[done] 指标      -> h5_clean_metrics.json
+[done] 清洗后音频 -> data/clean/
+============================================================================================================

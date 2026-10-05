@@ -3,3 +3,8 @@ soundfile>=0.12
 numpy>=1.24
 matplotlib>=3.7
 pyloudnorm>=0.1.1
+scipy>=1.10
+# 音频生成 / 源分离（03 需要，体积较大）
+# torch, torchaudio, transformers, accelerate, demucs
+# VAD（02 的数据清洗需要）
+silero-vad>=5.0

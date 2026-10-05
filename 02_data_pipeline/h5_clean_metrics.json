@@ -1,0 +1,652 @@
+{
+  "stats": {
+    "total": 10,
+    "keep": 3,
+    "flagged": 2,
+    "reject": 5,
+    "duration_in": 180.4,
+    "duration_out": 180.4,
+    "elapsed_sec": 4.99,
+    "throughput_x_realtime": 36.18,
+    "reject_reasons": {
+      "hard_clipping": 2,
+      "excessive_silence": 2,
+      "dc_offset": 1,
+      "too_short": 1
+    }
+  },
+  "detector_eval": [
+    {
+      "defect": "clipping",
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 8,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "defect": "silence",
+      "tp": 2,
+      "fp": 0,
+      "fn": 0,
+      "tn": 8,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "defect": "dc_offset",
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "tn": 9,
+      "precision": 1.0,
+      "recall": 1.0
+    },
+    {
+      "defect": "lowpass",
+      "tp": 1,
+      "fp": 1,
+      "fn": 0,
+      "tn": 8,
+      "precision": 0.5,
+      "recall": 1.0
+    },
+    {
+      "defect": "short",
+      "tp": 1,
+      "fp": 0,
+      "fn": 0,
+      "tn": 9,
+      "precision": 1.0,
+      "recall": 1.0
+    }
+  ],
+  "records": [
+    {
+      "file": "s01_clean_choice.wav",
+      "injected_defects": [],
+      "sample_rate_in": 44100,
+      "duration_in": 20.0,
+      "status": "keep",
+      "reject_reasons": [],
+      "metrics_before": {
+        "clipping_samples": 0,
+        "clipping_ratio": 0.0,
+        "clipping_max_run": 0,
+        "silence_ratio": 0.1416,
+        "rms_dbfs_mean": -30.28,
+        "dynamic_range_db": 39.5,
+        "dc_offset": -0.00012,
+        "bandwidth_hz": 4974.2,
+        "hf_energy_ratio": 0.516447,
+        "lufs": -23.08,
+        "duration_sec": 20.0
+      },
+      "metrics_after": {
+        "lufs": -20.24,
+        "peak": 0.97,
+        "duration_sec": 20.0,
+        "clipping_ratio": 0.0,
+        "dc_offset": -0.0
+      },
+      "processing": {
+        "vad": {
+          "backend": "energy-fallback(ValueError)",
+          "segments": 0,
+          "trimmed_sec": 0.0
+        },
+        "loudness_norm": {
+          "gain_db": 7.08,
+          "ceiling_applied": true,
+          "target_lufs": -16.0
+        }
+      },
+      "tags": {
+        "sample_rate": 44100,
+        "channels": 2,
+        "duration_sec": 20.0,
+        "has_clipping": false,
+        "silence_ratio": 0.1416,
+        "bandwidth_hz": 4974.2,
+        "hf_energy_ratio": 0.516447,
+        "vad_segments": 0,
+        "lufs_normalized": -16.0,
+        "source_file": "s01_clean_choice.wav"
+      },
+      "all_flags": [],
+      "output": "data/clean/s01_clean_choice.wav"
+    },
+    {
+      "file": "s02_clean_waltz.wav",
+      "injected_defects": [],
+      "sample_rate_in": 44100,
+      "duration_in": 20.0,
+      "status": "keep",
+      "reject_reasons": [],
+      "metrics_before": {
+        "clipping_samples": 0,
+        "clipping_ratio": 0.0,
+        "clipping_max_run": 0,
+        "silence_ratio": 0.0006,
+        "rms_dbfs_mean": -22.53,
+        "dynamic_range_db": 23.3,
+        "dc_offset": -0.00026,
+        "bandwidth_hz": 1765.7,
+        "hf_energy_ratio": 0.001282,
+        "lufs": -18.72,
+        "duration_sec": 20.0
+      },
+      "metrics_after": {
+        "lufs": -16.0,
+        "peak": 0.9568,
+        "duration_sec": 20.0,
+        "clipping_ratio": 0.0,
+        "dc_offset": 0.0
+      },
+      "processing": {
+        "vad": {
+          "backend": "energy-fallback(ValueError)",
+          "segments": 0,
+          "trimmed_sec": 0.0
+        },
+        "loudness_norm": {
+          "gain_db": 2.72,
+          "ceiling_applied": false,
+          "target_lufs": -16.0
+        }
+      },
+      "tags": {
+        "sample_rate": 44100,
+        "channels": 2,
+        "duration_sec": 20.0,
+        "has_clipping": false,
+        "silence_ratio": 0.0006,
+        "bandwidth_hz": 1765.7,
+        "hf_energy_ratio": 0.001282,
+        "vad_segments": 0,
+        "lufs_normalized": -16.0,
+        "source_file": "s02_clean_waltz.wav"
+      },
+      "all_flags": [],
+      "output": "data/clean/s02_clean_waltz.wav"
+    },
+    {
+      "file": "s03_clean_ragtime.wav",
+      "injected_defects": [],
+      "sample_rate_in": 22050,
+      "duration_in": 20.0,
+      "status": "keep",
+      "reject_reasons": [],
+      "metrics_before": {
+        "clipping_samples": 0,
+        "clipping_ratio": 0.0,
+        "clipping_max_run": 0,
+        "silence_ratio": 0.0035,
+        "rms_dbfs_mean": -25.88,
+        "dynamic_range_db": 22.38,
+        "dc_offset": -0.0,
+        "bandwidth_hz": 2347.1,
+        "hf_energy_ratio": 0.00087,
+        "lufs": -21.51,
+        "duration_sec": 20.0
+      },
+      "metrics_after": {
+        "lufs": -18.68,
+        "peak": 0.97,
+        "duration_sec": 20.0,
+        "clipping_ratio": 0.0,
+        "dc_offset": 0.0
+      },
+      "processing": {
+        "resampled": "22050->44100",
+        "vad": {
+          "backend": "energy-fallback(ValueError)",
+          "segments": 0,
+          "trimmed_sec": 0.0
+        },
+        "loudness_norm": {
+          "gain_db": 5.51,
+          "ceiling_applied": true,
+          "target_lufs": -16.0
+        }
+      },
+      "tags": {
+        "sample_rate": 44100,
+        "channels": 2,
+        "duration_sec": 20.0,
+        "has_clipping": false,
+        "silence_ratio": 0.0035,
+        "bandwidth_hz": 2347.1,
+        "hf_energy_ratio": 0.00087,
+        "vad_segments": 0,
+        "lufs_normalized": -16.0,
+        "source_file": "s03_clean_ragtime.wav"
+      },
+      "all_flags": [],
+      "output": "data/clean/s03_clean_ragtime.wav"
+    },
+    {
+      "file": "s04_clipped_choice.wav",
+      "injected_defects": [
+        "clipping"
+      ],
+      "sample_rate_in": 44100,
+      "duration_in": 20.0,
+      "status": "reject",
+      "reject_reasons": [
+        "hard_clipping"
+      ],
+      "metrics_before": {
+        "clipping_samples": 2755,
+        "clipping_ratio": 0.003124,
+        "clipping_max_run": 78,
+        "silence_ratio": 0.1416,
+        "rms_dbfs_mean": -29.99,
+        "dynamic_range_db": 40.36,
+        "dc_offset": -0.00031,
+        "bandwidth_hz": 5060.3,
+        "hf_energy_ratio": 0.509086,
+        "lufs": -19.73,
+        "duration_sec": 20.0
+      },
+      "metrics_after": {
+        "lufs": -20.0,
+        "peak": 0.97,
+        "duration_sec": 20.0,
+        "clipping_ratio": 0.0,
+        "dc_offset": -0.0
+      },
+      "processing": {
+        "vad": {
+          "backend": "skipped(rejected)",
+          "segments": 0,
+          "trimmed_sec": 0.0
+        },
+        "loudness_norm": {
+          "gain_db": 3.73,
+          "ceiling_applied": true,
+          "target_lufs": -16.0
+        }
+      },
+      "tags": {
+        "sample_rate": 44100,
+        "channels": 2,
+        "duration_sec": 20.0,
+        "has_clipping": true,
+        "silence_ratio": 0.1416,
+        "bandwidth_hz": 5060.3,
+        "hf_energy_ratio": 0.509086,
+        "vad_segments": 0,
+        "lufs_normalized": -16.0,
+        "source_file": "s04_clipped_choice.wav"
+      },
+      "all_flags": [
+        "hard_clipping"
+      ],
+      "output": "data/clean/s04_clipped_choice.wav"
+    },
+    {
+      "file": "s05_silence_waltz.wav",
+      "injected_defects": [
+        "silence"
+      ],
+      "sample_rate_in": 48000,
+      "duration_in": 20.0,
+      "status": "reject",
+      "reject_reasons": [
+        "excessive_silence"
+      ],
+      "metrics_before": {
+        "clipping_samples": 0,
+        "clipping_ratio": 0.0,
+        "clipping_max_run": 0,
+        "silence_ratio": 0.3482,
+        "rms_dbfs_mean": -100.06,
+        "dynamic_range_db": 224.61,
+        "dc_offset": -9e-05,
+        "bandwidth_hz": 1808.8,
+        "hf_energy_ratio": 0.001556,
+        "lufs": -21.34,
+        "duration_sec": 20.0
+      },
+      "metrics_after": {
+        "lufs": -18.12,
+        "peak": 0.97,
+        "duration_sec": 20.0,
+        "clipping_ratio": 0.0,
+        "dc_offset": 0.0
+      },
+      "processing": {
+        "resampled": "48000->44100",
+        "vad": {
+          "backend": "skipped(rejected)",
+          "segments": 0,
+          "trimmed_sec": 0.0
+        },
+        "loudness_norm": {
+          "gain_db": 5.34,
+          "ceiling_applied": true,
+          "target_lufs": -16.0
+        }
+      },
+      "tags": {
+        "sample_rate": 44100,
+        "channels": 2,
+        "duration_sec": 20.0,
+        "has_clipping": false,
+        "silence_ratio": 0.3482,
+        "bandwidth_hz": 1808.8,
+        "hf_energy_ratio": 0.001556,
+        "vad_segments": 0,
+        "lufs_normalized": -16.0,
+        "source_file": "s05_silence_waltz.wav"
+      },
+      "all_flags": [
+        "excessive_silence"
+      ],
+      "output": "data/clean/s05_silence_waltz.wav"
+    },
+    {
+      "file": "s06_dc_ragtime.wav",
+      "injected_defects": [
+        "dc_offset"
+      ],
+      "sample_rate_in": 44100,
+      "duration_in": 20.0,
+      "status": "reject",
+      "reject_reasons": [
+        "dc_offset"
+      ],
+      "metrics_before": {
+        "clipping_samples": 0,
+        "clipping_ratio": 0.0,
+        "clipping_max_run": 0,
+        "silence_ratio": 0.0,
+        "rms_dbfs_mean": -21.53,
+        "dynamic_range_db": 10.28,
+        "dc_offset": 0.05,
+        "bandwidth_hz": 2088.7,
+        "hf_energy_ratio": 0.000917,
+        "lufs": -21.51,
+        "duration_sec": 20.0
+      },
+      "metrics_after": {
+        "lufs": -18.68,
+        "peak": 0.97,
+        "duration_sec": 20.0,
+        "clipping_ratio": 0.0,
+        "dc_offset": -0.0
+      },
+      "processing": {
+        "vad": {
+          "backend": "skipped(rejected)",
+          "segments": 0,
+          "trimmed_sec": 0.0
+        },
+        "loudness_norm": {
+          "gain_db": 5.51,
+          "ceiling_applied": true,
+          "target_lufs": -16.0
+        }
+      },
+      "tags": {
+        "sample_rate": 44100,
+        "channels": 2,
+        "duration_sec": 20.0,
+        "has_clipping": false,
+        "silence_ratio": 0.0,
+        "bandwidth_hz": 2088.7,
+        "hf_energy_ratio": 0.000917,
+        "vad_segments": 0,
+        "lufs_normalized": -16.0,
+        "source_file": "s06_dc_ragtime.wav"
+      },
+      "all_flags": [
+        "dc_offset"
+      ],
+      "output": "data/clean/s06_dc_ragtime.wav"
+    },
+    {
+      "file": "s07_lowpass_choice.wav",
+      "injected_defects": [
+        "lowpass"
+      ],
+      "sample_rate_in": 44100,
+      "duration_in": 20.0,
+      "status": "flagged",
+      "reject_reasons": [],
+      "metrics_before": {
+        "clipping_samples": 0,
+        "clipping_ratio": 0.0,
+        "clipping_max_run": 0,
+        "silence_ratio": 0.1608,
+        "rms_dbfs_mean": -31.02,
+        "dynamic_range_db": 41.9,
+        "dc_offset": -0.00012,
+        "bandwidth_hz": 882.9,
+        "hf_energy_ratio": 1e-05,
+        "lufs": -23.25,
+        "duration_sec": 20.0
+      },
+      "metrics_after": {
+        "lufs": -18.79,
+        "peak": 0.97,
+        "duration_sec": 20.0,
+        "clipping_ratio": 0.0,
+        "dc_offset": -0.0
+      },
+      "processing": {
+        "vad": {
+          "backend": "energy-fallback(ValueError)",
+          "segments": 0,
+          "trimmed_sec": 0.0
+        },
+        "loudness_norm": {
+          "gain_db": 7.25,
+          "ceiling_applied": true,
+          "target_lufs": -16.0
+        }
+      },
+      "tags": {
+        "sample_rate": 44100,
+        "channels": 2,
+        "duration_sec": 20.0,
+        "has_clipping": false,
+        "silence_ratio": 0.1608,
+        "bandwidth_hz": 882.9,
+        "hf_energy_ratio": 1e-05,
+        "vad_segments": 0,
+        "lufs_normalized": -16.0,
+        "source_file": "s07_lowpass_choice.wav"
+      },
+      "all_flags": [
+        "bandwidth_limited"
+      ],
+      "output": "data/clean/s07_lowpass_choice.wav"
+    },
+    {
+      "file": "s08_noisy_waltz.wav",
+      "injected_defects": [
+        "noise"
+      ],
+      "sample_rate_in": 16000,
+      "duration_in": 20.0,
+      "status": "flagged",
+      "reject_reasons": [],
+      "metrics_before": {
+        "clipping_samples": 0,
+        "clipping_ratio": 0.0,
+        "clipping_max_run": 0,
+        "silence_ratio": 0.0,
+        "rms_dbfs_mean": -22.05,
+        "dynamic_range_db": 20.89,
+        "dc_offset": -0.00023,
+        "bandwidth_hz": 2734.7,
+        "hf_energy_ratio": 0.0,
+        "lufs": -18.67,
+        "duration_sec": 20.0
+      },
+      "metrics_after": {
+        "lufs": -16.11,
+        "peak": 0.97,
+        "duration_sec": 20.0,
+        "clipping_ratio": 0.0,
+        "dc_offset": 0.0
+      },
+      "processing": {
+        "resampled": "16000->44100",
+        "vad": {
+          "backend": "energy-fallback(ValueError)",
+          "segments": 0,
+          "trimmed_sec": 0.0
+        },
+        "loudness_norm": {
+          "gain_db": 2.67,
+          "ceiling_applied": true,
+          "target_lufs": -16.0
+        }
+      },
+      "tags": {
+        "sample_rate": 44100,
+        "channels": 2,
+        "duration_sec": 20.0,
+        "has_clipping": false,
+        "silence_ratio": 0.0,
+        "bandwidth_hz": 2734.7,
+        "hf_energy_ratio": 0.0,
+        "vad_segments": 0,
+        "lufs_normalized": -16.0,
+        "source_file": "s08_noisy_waltz.wav"
+      },
+      "all_flags": [
+        "bandwidth_limited"
+      ],
+      "output": "data/clean/s08_noisy_waltz.wav"
+    },
+    {
+      "file": "s09_short_ragtime.wav",
+      "injected_defects": [
+        "short"
+      ],
+      "sample_rate_in": 44100,
+      "duration_in": 0.4,
+      "status": "reject",
+      "reject_reasons": [
+        "too_short"
+      ],
+      "metrics_before": {
+        "clipping_samples": 0,
+        "clipping_ratio": 0.0,
+        "clipping_max_run": 0,
+        "silence_ratio": 0.1714,
+        "rms_dbfs_mean": -32.2,
+        "dynamic_range_db": 73.17,
+        "dc_offset": -9e-05,
+        "bandwidth_hz": 2691.7,
+        "hf_energy_ratio": 0.000987,
+        "lufs": -20.96,
+        "duration_sec": 0.4
+      },
+      "metrics_after": {
+        "lufs": -16.0,
+        "peak": 0.762,
+        "duration_sec": 0.4,
+        "clipping_ratio": 0.0,
+        "dc_offset": -0.0
+      },
+      "processing": {
+        "vad": {
+          "backend": "skipped(rejected)",
+          "segments": 0,
+          "trimmed_sec": 0.0
+        },
+        "loudness_norm": {
+          "gain_db": 4.96,
+          "ceiling_applied": false,
+          "target_lufs": -16.0
+        }
+      },
+      "tags": {
+        "sample_rate": 44100,
+        "channels": 2,
+        "duration_sec": 0.4,
+        "has_clipping": false,
+        "silence_ratio": 0.1714,
+        "bandwidth_hz": 2691.7,
+        "hf_energy_ratio": 0.000987,
+        "vad_segments": 0,
+        "lufs_normalized": -16.0,
+        "source_file": "s09_short_ragtime.wav"
+      },
+      "all_flags": [
+        "too_short"
+      ],
+      "output": "data/clean/s09_short_ragtime.wav"
+    },
+    {
+      "file": "s10_multi_choice.wav",
+      "injected_defects": [
+        "clipping",
+        "silence",
+        "noise"
+      ],
+      "sample_rate_in": 44100,
+      "duration_in": 20.0,
+      "status": "reject",
+      "reject_reasons": [
+        "hard_clipping",
+        "excessive_silence"
+      ],
+      "metrics_before": {
+        "clipping_samples": 2092,
+        "clipping_ratio": 0.002372,
+        "clipping_max_run": 73,
+        "silence_ratio": 0.3476,
+        "rms_dbfs_mean": -100.7,
+        "dynamic_range_db": 223.52,
+        "dc_offset": -0.0003,
+        "bandwidth_hz": 13264.5,
+        "hf_energy_ratio": 0.823731,
+        "lufs": -18.65,
+        "duration_sec": 20.0
+      },
+      "metrics_after": {
+        "lufs": -18.91,
+        "peak": 0.97,
+        "duration_sec": 20.0,
+        "clipping_ratio": 0.0,
+        "dc_offset": 0.0
+      },
+      "processing": {
+        "vad": {
+          "backend": "skipped(rejected)",
+          "segments": 0,
+          "trimmed_sec": 0.0
+        },
+        "loudness_norm": {
+          "gain_db": 2.65,
+          "ceiling_applied": true,
+          "target_lufs": -16.0
+        }
+      },
+      "tags": {
+        "sample_rate": 44100,
+        "channels": 2,
+        "duration_sec": 20.0,
+        "has_clipping": true,
+        "silence_ratio": 0.3476,
+        "bandwidth_hz": 13264.5,
+        "hf_energy_ratio": 0.823731,
+        "vad_segments": 0,
+        "lufs_normalized": -16.0,
+        "source_file": "s10_multi_choice.wav"
+      },
+      "all_flags": [
+        "hard_clipping",
+        "excessive_silence"
+      ],
+      "output": "data/clean/s10_multi_choice.wav"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+﻿file                       注入了什么                      sr    BW99    HFratio
+--------------------------------------------------------------------------------
+s01_clean_choice.wav       none                    44100    4974    0.51645
+s02_clean_waltz.wav        none                    44100    1766    0.00128
+s03_clean_ragtime.wav      none                    22050    2336    0.00059
+s04_clipped_choice.wav     clipping                44100    5060    0.50909
+s05_silence_waltz.wav      silence                 48000    1805    0.00157
+s06_dc_ragtime.wav         dc_offset               44100    2089    0.00092
+s07_lowpass_choice.wav     lowpass                 44100     883    0.00001
+s08_noisy_waltz.wav        noise                   16000    2758    0.00000
+s09_short_ragtime.wav      short                   44100    2692    0.00099
+s10_multi_choice.wav       clipping,silence,noise  44100   13264    0.82373
+
+干净文件的 HFratio 范围 : 0.00059 ~ 0.51645  (n=3)
+低通文件的 HFratio      : [9.726451025926508e-06]
+干净最小值 / 低通最大值 = 60.4x
+→ 建议阈值取几何中点附近: 0.00008

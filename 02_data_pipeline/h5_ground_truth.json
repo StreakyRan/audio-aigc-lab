@@ -1,0 +1,98 @@
+[
+  {
+    "file": "s01_clean_choice.wav",
+    "source": "music_choice",
+    "injected_defects": [],
+    "note": "干净",
+    "sample_rate": 44100,
+    "duration_sec": 20.0
+  },
+  {
+    "file": "s02_clean_waltz.wav",
+    "source": "music_waltz",
+    "injected_defects": [],
+    "note": "干净",
+    "sample_rate": 44100,
+    "duration_sec": 20.0
+  },
+  {
+    "file": "s03_clean_ragtime.wav",
+    "source": "music_ragtime",
+    "injected_defects": [],
+    "note": "干净",
+    "sample_rate": 22050,
+    "duration_sec": 20.0
+  },
+  {
+    "file": "s04_clipped_choice.wav",
+    "source": "music_choice",
+    "injected_defects": [
+      "clipping"
+    ],
+    "note": "硬削波",
+    "sample_rate": 44100,
+    "duration_sec": 20.0
+  },
+  {
+    "file": "s05_silence_waltz.wav",
+    "source": "music_waltz",
+    "injected_defects": [
+      "silence"
+    ],
+    "note": "大段静音",
+    "sample_rate": 48000,
+    "duration_sec": 20.0
+  },
+  {
+    "file": "s06_dc_ragtime.wav",
+    "source": "music_ragtime",
+    "injected_defects": [
+      "dc_offset"
+    ],
+    "note": "直流偏移",
+    "sample_rate": 44100,
+    "duration_sec": 20.0
+  },
+  {
+    "file": "s07_lowpass_choice.wav",
+    "source": "music_choice",
+    "injected_defects": [
+      "lowpass"
+    ],
+    "note": "带宽受限 3kHz",
+    "sample_rate": 44100,
+    "duration_sec": 20.0
+  },
+  {
+    "file": "s08_noisy_waltz.wav",
+    "source": "music_waltz",
+    "injected_defects": [
+      "noise"
+    ],
+    "note": "SNR 12dB 噪声",
+    "sample_rate": 16000,
+    "duration_sec": 20.0
+  },
+  {
+    "file": "s09_short_ragtime.wav",
+    "source": "music_ragtime",
+    "injected_defects": [
+      "short"
+    ],
+    "note": "超短 0.4s",
+    "sample_rate": 44100,
+    "duration_sec": 0.4
+  },
+  {
+    "file": "s10_multi_choice.wav",
+    "source": "music_choice",
+    "injected_defects": [
+      "clipping",
+      "silence",
+      "noise"
+    ],
+    "note": "多重缺陷",
+    "sample_rate": 44100,
+    "duration_sec": 20.0
+  }
+]
