@@ -1,0 +1,33 @@
+# 音频 / Python
+__pycache__/
+*.py[cod]
+*.npy
+*.npz
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+
+# 音频文件（体积大，不入库）
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.m4a
+
+# 模型权重
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.bin
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 例外：结果目录里保留的小文件和图片
+!01_audio_analysis/results/*.npy
+!01_audio_analysis/results/*.png
