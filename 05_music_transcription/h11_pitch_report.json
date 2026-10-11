@@ -1,0 +1,103 @@
+{
+  "bpm": 120.0,
+  "duration_sec": 5.0,
+  "gt_notes": 13,
+  "est_notes": 13,
+  "f0_backend": "librosa.pyin",
+  "frame_length": 2048,
+  "hop_length": 256,
+  "time_resolution_ms": 11.61,
+  "frame_rate_fps": 86.13,
+  "voiced_ratio": 0.7981,
+  "f0_range_hz": [
+    261.63,
+    440.0
+  ],
+  "eval_tol_80ms": {
+    "tp": 13,
+    "fp": 0,
+    "fn": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+  },
+  "chords_per_beat": [
+    {
+      "beat": 1,
+      "time": 0.0,
+      "chord": "C",
+      "match_score": 0.513,
+      "melody_pitch_classes": [
+        0,
+        4
+      ]
+    },
+    {
+      "beat": 2,
+      "time": 0.5,
+      "chord": "Em",
+      "match_score": 0.536,
+      "melody_pitch_classes": [
+        4,
+        7
+      ]
+    },
+    {
+      "beat": 3,
+      "time": 1.0,
+      "chord": "无完整三和弦",
+      "match_score": 0.0,
+      "melody_pitch_classes": [
+        7
+      ]
+    },
+    {
+      "beat": 4,
+      "time": 1.5,
+      "chord": "C",
+      "match_score": 1.0,
+      "melody_pitch_classes": [
+        0,
+        4
+      ]
+    },
+    {
+      "beat": 5,
+      "time": 2.0,
+      "chord": "Am",
+      "match_score": 0.497,
+      "melody_pitch_classes": [
+        0,
+        9
+      ]
+    },
+    {
+      "beat": 6,
+      "time": 2.5,
+      "chord": "Dm",
+      "match_score": 0.517,
+      "melody_pitch_classes": [
+        2,
+        5
+      ]
+    },
+    {
+      "beat": 7,
+      "time": 3.0,
+      "chord": "无完整三和弦",
+      "match_score": 0.0,
+      "melody_pitch_classes": [
+        2
+      ]
+    },
+    {
+      "beat": 8,
+      "time": 3.5,
+      "chord": "无完整三和弦",
+      "match_score": 0.0,
+      "melody_pitch_classes": [
+        0
+      ]
+    }
+  ]
+}
