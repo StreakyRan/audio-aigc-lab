@@ -140,7 +140,7 @@ f0, voiced_flag, voiced_prob = librosa.pyin(
 times = librosa.times_like(f0, sr=SR, hop_length=HOP)
 voiced = np.isfinite(f0)
 
-print(f"分析帧数      : {len(f0)}   (帧移 {HOP}/{SR*1000:.1f}ms → {SR/HOP:.1f} fps)")
+print(f"分析帧数      : {len(f0)}   (帧移 {HOP} samples = {HOP/SR*1000:.1f} ms → {SR/HOP:.1f} fps)")
 print(f"有声帧占比    : {voiced.mean()*100:.1f}%")
 print(f"f0 范围       : {np.nanmin(f0):.1f} ~ {np.nanmax(f0):.1f} Hz")
 print(f"时间分辨率    : {HOP/SR*1000:.1f} ms")
@@ -342,7 +342,7 @@ for i in range(n_cmp):
     print(f"  {gs}  |  {es}  {ok}")
 
 # =====================================================================
-title("7. 汇总")
+# 上表即为最终评估结果；以下写入 JSON / Markdown 报告
 
 report = {
     "bpm": BPM,
@@ -367,7 +367,7 @@ with open(os.path.join(HERE, "h11_pitch_report.json"), "w", encoding="utf-8") as
 # Markdown 报告
 md = [
     "# H11 音高识别与 MIDI 自动扒谱 · 实测报告", "",
-    f"- 测试旋律：{total_beats} 拍 @ {BPM} BPM（{total_dur:.1f}s），**{len(gt_notes)} 个音符**",
+    f"- 测试旋律：{total_beats} 拍 @ {BPM} BPM（{total_beats*BEAT:.1f}s），**{len(gt_notes)} 个音符**",
     f"- 基频检测：`librosa.pyin`，帧长 {FRAME_LENGTH}、帧移 {HOP}",
     f"- **时间分辨率 {HOP/SR*1000:.1f} ms**（帧率 {SR/HOP:.0f} fps）",
     f"- f0 范围：{np.nanmin(f0):.0f}–{np.nanmax(f0):.0f} Hz｜有声帧占比 {voiced.mean()*100:.0f}%",
