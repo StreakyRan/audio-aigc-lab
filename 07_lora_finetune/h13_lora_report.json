@@ -1,0 +1,109 @@
+{
+  "device": "cuda",
+  "gpu": "NVIDIA GeForce RTX 3050 Laptop GPU",
+  "gpu_total_gb": 4.0,
+  "data": {
+    "total": 46,
+    "pretrain": 32,
+    "finetune": 10,
+    "val": 4,
+    "n_classes": 4
+  },
+  "pretrain": {
+    "epochs": 20,
+    "final_loss": 1.1944,
+    "ft_acc": 0.0,
+    "val_acc": 0.0,
+    "time_s": 0.92
+  },
+  "full_finetune": {
+    "trainable": 19060,
+    "final_loss": 1.0828,
+    "ft_acc": 0.4,
+    "val_acc": 0.0,
+    "time_s": 0.31,
+    "val_curve": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ]
+  },
+  "lora": {
+    "r": 8,
+    "alpha": 16,
+    "trainable": 1576,
+    "trainable_pct": 8.269,
+    "param_reduction_x": 12.09,
+    "final_loss": 1.1561,
+    "ft_acc": 0.4,
+    "val_acc": 0.25,
+    "time_s": 0.49,
+    "val_curve": [
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.0,
+      0.25,
+      0.25,
+      0.25,
+      0.25,
+      0.25,
+      0.25,
+      0.25,
+      0.25,
+      0.25,
+      0.25
+    ]
+  },
+  "rank_ablation": [
+    {
+      "r": 2,
+      "trainable": 394,
+      "ratio_pct": 2.067,
+      "final_loss": 1.1627,
+      "ft_acc": 0.4,
+      "val_acc": 0.25,
+      "peak_gb": 0.0325
+    },
+    {
+      "r": 4,
+      "trainable": 788,
+      "ratio_pct": 4.134,
+      "final_loss": 1.129,
+      "ft_acc": 0.4,
+      "val_acc": 0.25,
+      "peak_gb": 0.0325
+    },
+    {
+      "r": 8,
+      "trainable": 1576,
+      "ratio_pct": 8.269,
+      "final_loss": 1.0473,
+      "ft_acc": 0.4,
+      "val_acc": 0.25,
+      "peak_gb": 0.0325
+    },
+    {
+      "r": 16,
+      "trainable": 3152,
+      "ratio_pct": 16.537,
+      "final_loss": 1.2802,
+      "ft_acc": 0.5,
+      "val_acc": 0.0,
+      "peak_gb": 0.0325
+    }
+  ]
+}
