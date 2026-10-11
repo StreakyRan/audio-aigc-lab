@@ -369,7 +369,7 @@ with open(os.path.join(HERE, "h11_pitch_report.json"), "w", encoding="utf-8") as
     json.dump(report, f, ensure_ascii=False, indent=2)
 
 print(f"""
-关键结果（可写进简历/面试讲）：
+关键结果：
 
 1. 用 librosa.pyin 做基频检测，帧移 {HOP} 样本 → 时间分辨率 {HOP/SR*1000:.1f} ms、帧率 {SR/HOP:.0f} fps；
    检测到 f0 范围 {np.nanmin(f0):.0f}–{np.nanmax(f0):.0f} Hz，有声帧占比 {voiced.mean()*100:.0f}%。

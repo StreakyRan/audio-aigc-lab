@@ -510,7 +510,7 @@ with open(os.path.join(HERE, "h12_effects_report.json"), "w", encoding="utf-8") 
     json.dump(effects_summary, f, ensure_ascii=False, indent=2)
 
 print(f"""
-关键结果（可写进简历/面试讲）：
+关键结果：
 
 1. 实现 6 个可参数化音频效果：失真（soft/hard + 驱动 + 音色）、卷积混响（合成 IR + 阻尼 + 预延迟）、
    反馈延迟（ping-pong 立体声）、合唱（多 LFO 调制延迟）、等功率声像、Mid/Side 立体声展宽。

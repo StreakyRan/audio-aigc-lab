@@ -9,29 +9,29 @@
     {
       "name": "PyTorch fp32",
       "size_mb": 0.0802,
-      "latency_ms": 8.6002,
+      "latency_ms": 8.2028,
       "speedup": 1.0,
       "max_diff": "—"
     },
     {
       "name": "ONNX fp32",
       "size_mb": 0.0155,
-      "latency_ms": 1.4173,
-      "speedup": 6.068,
+      "latency_ms": 1.6705,
+      "speedup": 4.91,
       "max_diff": "1.91e-06"
     },
     {
       "name": "ONNX fp16",
       "size_mb": 0.0514,
-      "latency_ms": 2.3544,
-      "speedup": 3.653,
+      "latency_ms": 6.4167,
+      "speedup": 1.278,
       "max_diff": "2.23e-03"
     },
     {
       "name": "ONNX int8",
       "size_mb": 0.0316,
-      "latency_ms": 23.3733,
-      "speedup": 0.368,
+      "latency_ms": 32.589,
+      "speedup": 0.252,
       "max_diff": "6.09e-02"
     }
   ],

@@ -30,7 +30,7 @@ for f in ["Microsoft YaHei", "SimHei", "SimSun"]:
     except Exception:
         pass
 
-# ---------------- 参数（面试要能说出这三个数） ----------------
+# ---------------- 关键参数 ----------------
 SR       = 44100     # 目标采样率
 N_FFT    = 2048      # FFT 点数  -> 频率 bin = N_FFT/2 + 1 = 1025
 HOP      = 512       # 帧移      -> 帧率 = SR/HOP ≈ 86.13 fps
