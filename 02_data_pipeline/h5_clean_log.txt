@@ -3,14 +3,14 @@
 ============================================================================================================
 file                      sr_in  dur_in    clip   silR      DC   BW(Hz)    LUFS LUFS_out dur_out   status reasons
 ------------------------------------------------------------------------------------------------------------
-s01_clean_choice.wav      44100  20.00s 0.00000  0.142 -0.0001     4974  -23.08  -20.24  20.00s     KEEP 
-s02_clean_waltz.wav       44100  20.00s 0.00000  0.001 -0.0003     1766  -18.72  -16.00  20.00s     KEEP 
-s03_clean_ragtime.wav     22050  20.00s 0.00000  0.003 -0.0000     2347  -21.51  -18.68  20.00s     KEEP 
+s01_clean_choice.wav      44100  20.00s 0.00000  0.142 -0.0001     4974  -23.08  -20.24  20.00s     KEEP
+s02_clean_waltz.wav       44100  20.00s 0.00000  0.001 -0.0003     1766  -18.72  -16.00  20.00s     KEEP
+s03_clean_ragtime.wav     22050  20.00s 0.00000  0.003 -0.0000     2347  -21.51  -18.68  20.00s     KEEP
 s04_clipped_choice.wav    44100  20.00s 0.00312  0.142 -0.0003     5060  -19.73  -20.00  20.00s   REJECT hard_clipping
 s05_silence_waltz.wav     48000  20.00s 0.00000  0.348 -0.0001     1809  -21.34  -18.12  20.00s   REJECT excessive_silence
 s06_dc_ragtime.wav        44100  20.00s 0.00000  0.000  0.0500     2089  -21.51  -18.68  20.00s   REJECT dc_offset
-s07_lowpass_choice.wav    44100  20.00s 0.00000  0.161 -0.0001      883  -23.25  -18.79  20.00s  FLAGGED 
-s08_noisy_waltz.wav       16000  20.00s 0.00000  0.000 -0.0002     2735  -18.67  -16.11  20.00s  FLAGGED 
+s07_lowpass_choice.wav    44100  20.00s 0.00000  0.161 -0.0001      883  -23.25  -18.79  20.00s  FLAGGED
+s08_noisy_waltz.wav       16000  20.00s 0.00000  0.000 -0.0002     2735  -18.67  -16.11  20.00s  FLAGGED
 s09_short_ragtime.wav     44100   0.40s 0.00000  0.171 -0.0001     2692  -20.96  -16.00   0.40s   REJECT too_short
 s10_multi_choice.wav      44100  20.00s 0.00237  0.348 -0.0003    13264  -18.65  -18.91  20.00s   REJECT hard_clipping,excessive_silence
 

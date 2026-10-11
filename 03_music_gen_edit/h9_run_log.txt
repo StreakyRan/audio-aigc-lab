@@ -1,13 +1,13 @@
-﻿python : Downloading file 'admiralbob77_-_Choice_-_Drum-bass.ogg' from 
-'https://librosa.org/data/audio/admiralbob77_-_Choice_-_Drum-bass.ogg' to 
+﻿python : Downloading file 'admiralbob77_-_Choice_-_Drum-bass.ogg' from
+'https://librosa.org/data/audio/admiralbob77_-_Choice_-_Drum-bass.ogg' to
 'C:\Users\���Ȼ\AppData\Local\librosa\librosa\Cache'.
 所在位置 行:3 字符: 1
 + python demucs_separate.py 2>&1 | Out-File -Encoding utf8 "h9_run_log. ...
 + ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     + CategoryInfo          : NotSpecified: (Downloading fil...librosa\Cache'.:String) [], RemoteException
     + FullyQualifiedErrorId : NativeCommandError
- 
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits 
+
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits
 and faster downloads.
 ==================================================================
 输入      : C:\Users\伍浩然\AppData\Local\librosa\librosa\Cache\admiralbob77_-_Choice_-_Drum-bass.ogg
@@ -19,13 +19,13 @@ and faster downloads.
 [input] 采样率 44100 Hz | 声道 2 | 时长 25.03s
 [model] 加载 16.9s | 参数量 42.0M (41,984,456)
 
-  0%|                                                                                  | 0.0/29.25 [00:00<?, 
+  0%|                                                                                  | 0.0/29.25 [00:00<?,
 ?seconds/s]
- 20%|������������������������������                                                          | 5.85/29.25 
+ 20%|������������������������������                                                          | 5.85/29.25
 [00:01<00:05,  4.65seconds/s]
- 40%|������������������������������������������������������������                                           | 
+ 40%|������������������������������������������������������������                                           |
 11.7/29.25 [00:01<00:02,  8.73seconds/s]
- 60%|������������������������������������������������������������������������                       | 
+ 60%|������������������������������������������������������������������������                       |
 17.549999999999997/29.25 [00:01<00:00, 12.10seconds/s]
  80%|������������������������������������������������������������������������������������������������������������������
 ����              | 23.4/29.25 [00:02<00:00, 14.79seconds/s]
