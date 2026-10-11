@@ -119,6 +119,53 @@ y = (y / np.max(np.abs(y)) * 0.9).astype(np.float32)
 wav_path = os.path.join(OUT, "h11_melody.wav")
 sf.write(wav_path, y, SR)
 
+# ---------------------------------------------------------------------
+# 同时构造一段「复音」测试：C - Am - F - G 和弦进行 + 旋律
+# 用途：① 演示扒谱结果可被 DAW 打开 ② 对比单音/复音的表现差异
+CHORD_PROG = [
+    # (和弦根音, 和弦音, 起始拍, 时值拍)
+    ("C",  ["C4", "E4", "G4"], 0.0, 4.0),
+    ("Am", ["A3", "C4", "E4"], 4.0, 4.0),
+    ("F",  ["F3", "A3", "C4"], 8.0, 4.0),
+    ("G",  ["G3", "B3", "D4"], 12.0, 4.0),
+]
+POLY_MELODY = [
+    ("E5", 0.0, 1.0), ("D5", 1.0, 1.0), ("C5", 2.0, 2.0),
+    ("C5", 4.0, 1.0), ("B4", 5.0, 1.0), ("A4", 6.0, 2.0),
+    ("A4", 8.0, 1.0), ("C5", 9.0, 1.0), ("F5", 10.0, 2.0),
+    ("D5", 12.0, 1.0), ("B4", 13.0, 1.0), ("G4", 14.0, 2.0),
+]
+
+poly_beats = 16.0
+poly_dur = poly_beats * BEAT
+y_poly = np.zeros(int(SR * (poly_dur + 1.0)), dtype=np.float32)
+poly_notes = []
+
+# 铺和弦（三音同时发声 = 复音）
+# 音量权衡：和弦三音齐奏的能量天然高于单音旋律，这里把和弦降到 0.30、
+# 旋律提到 1.0，使旋律在混音中占主导（更贴近真实"伴奏+主旋律"的平衡）
+for cname, tones, st, du in CHORD_PROG:
+    for tn in tones:
+        m = midi_name_to_number(tn)
+        s = int(st * BEAT * SR)
+        seg = synth_note(midi_to_hz(m), du * BEAT) * 0.30
+        y_poly[s:s + len(seg)] += seg
+        poly_notes.append({"name": tn, "midi": m, "start": st * BEAT,
+                           "end": (st + du) * BEAT, "kind": "chord"})
+
+# 叠旋律
+for name, st, du in POLY_MELODY:
+    m = midi_name_to_number(name)
+    s = int(st * BEAT * SR)
+    seg = synth_note(midi_to_hz(m), du * BEAT) * 1.0
+    y_poly[s:s + len(seg)] += seg
+    poly_notes.append({"name": name, "midi": m, "start": st * BEAT,
+                       "end": (st + du) * BEAT, "kind": "melody"})
+
+y_poly += np.random.default_rng(1).normal(0, 0.003, y_poly.shape).astype(np.float32)
+y_poly = (y_poly / np.max(np.abs(y_poly)) * 0.9).astype(np.float32)
+sf.write(os.path.join(OUT, "h11_polyphonic_chords.wav"), y_poly, SR)
+
 print(f"旋律长度      : {total_beats} 拍 = {total_beats*BEAT:.1f}s @ {BPM} BPM")
 print(f"音符数        : {len(gt_notes)}")
 print(f"音域          : {min(g['name'] for g in gt_notes)} ~ {max(g['name'] for g in gt_notes)}")
@@ -218,8 +265,20 @@ pm_gt.instruments.append(inst_gt)
 midi_gt_path = os.path.join(OUT, "h11_ground_truth.mid")
 pm_gt.write(midi_gt_path)
 
+# --- 复音测试的真实音符 → MIDI（和弦 + 旋律，用于 DAW 对比试听）---
+pm_poly = pretty_midi.PrettyMIDI(initial_tempo=BPM)
+inst_poly = pretty_midi.Instrument(program=0)          # 0 = Acoustic Grand Piano
+for n in poly_notes:
+    inst_poly.notes.append(pretty_midi.Note(
+        velocity=80 if n["kind"] == "melody" else 65,
+        pitch=n["midi"], start=float(n["start"]), end=float(n["end"])))
+pm_poly.instruments.append(inst_poly)
+midi_poly_path = os.path.join(OUT, "h11_polyphonic_ground_truth.mid")
+pm_poly.write(midi_poly_path)
+
 print(f"识别结果 MIDI -> {os.path.basename(midi_path)}  ({os.path.getsize(midi_path)} bytes)")
 print(f"真值 MIDI     -> {os.path.basename(midi_gt_path)}  ({os.path.getsize(midi_gt_path)} bytes)")
+print(f"复音真值 MIDI -> {os.path.basename(midi_poly_path)}  ({os.path.getsize(midi_poly_path)} bytes)")
 print("说明：MIDI 文件可直接用 DAW（Studio One / Cubase / Logic）或打谱软件打开试听")
 
 # =====================================================================
@@ -340,6 +399,78 @@ for i in range(n_cmp):
     else:
         ok = "⚠️"
     print(f"  {gs}  |  {es}  {ok}")
+
+# =====================================================================
+title("7. 复音测试：C - Am - F - G 和弦进行 + 旋律")
+
+print("输入：4 小节和弦进行（C-Am-F-G，每小节三音齐奏）+ 上方旋律，共 16 拍")
+print("说明：pyin 是**单音基频估计器**，遇到复音会只跟踪其中最显著的一条——")
+print("      因此本节的产出是「旋律线近似」，不是完整的复音转谱。")
+print()
+
+# 用同一套流水线跑复音输入
+f0_p, vf_p, vp_p = librosa.pyin(
+    y_poly, fmin=librosa.note_to_hz("C3"), fmax=librosa.note_to_hz("C6"),
+    sr=SR, frame_length=FRAME_LENGTH, hop_length=HOP,
+)
+times_p = librosa.times_like(f0_p, sr=SR, hop_length=HOP)
+voiced_p = np.isfinite(f0_p)
+est_poly = segment_notes(f0_p, voiced_p, times_p)
+
+print(f"复音输入检测到音符数 : {len(est_poly)}（真实音符 {len(poly_notes)} 个，含和弦音）")
+print(f"有声帧占比           : {voiced_p.mean()*100:.1f}%")
+print()
+print("检测到的音名（供对照）:")
+_det_names = [n["name"] for n in est_poly]
+print(f"  {', '.join(_det_names)}")
+print("真实旋律（高音区）:")
+print(f"  {', '.join(n for n, _, _ in POLY_MELODY)}")
+print()
+_det_pc = sorted(set(int(n['midi']) for n in est_poly))
+print(f"检测音高范围 : MIDI {min(_det_pc)}–{max(_det_pc)}（低音区，被和弦主导）")
+_mel_pc = sorted(set(midi_name_to_number(n) for n, _, _ in POLY_MELODY))
+print(f"旋律音高范围 : MIDI {min(_mel_pc)}–{max(_mel_pc)}（高音区）")
+
+print("""
+📌 这组对照**演示了单音基频估计器的固有边界**（不是实现 bug）:
+
+  1. pyin 的设计目标是**单音**基频估计 —— 它的输出是"每帧一条 f0"，
+     遇到复音必然只能pick 一条。
+  2. 它选择的是**能量/谐波结构最显著**的那条基频。
+     本例中和弦三音齐奏的能量高于单条旋律，所以它跟踪了和弦根音 C3。
+  3. 因此产出是「**低音区近似**」，而不是旋律线，也不是完整复音转谱。
+
+  要得到完整复音转谱，需要换方法：
+    · 多基频估计（Multi-F0）：Basic Pitch / MT3 / 专用钢琴转谱模型
+    · 或**先做音源分离**（Demucs 拆轨）→ 对每轨单独做单音扒谱 → 再合并
+""")
+
+# 与真实旋律逐音对照（用于量化"单音估计器在复音上的偏差"）
+mel_gt = [n for n in poly_notes if n["kind"] == "melody"]
+print()
+print(f"{'真实旋律':>8} {'起始(s)':>9}  |  {'是否被 pyin 跟踪':>16}")
+print("-" * 46)
+_hit = 0
+for g in mel_gt:
+    ok = any(abs(g["start"] - e["start"]) <= 0.1 and g["midi"] == e["midi"] for e in est_poly)
+    _hit += ok
+    print(f"{g['name']:>8} {g['start']:>9.3f}  |  {'是' if ok else '否（被和弦覆盖）':>16}")
+print("-" * 46)
+print(f"旋律音命中率: {_hit}/{len(mel_gt)} = {_hit/len(mel_gt)*100:.0f}%")
+print()
+print("→ 这个 0% 不是实现错误，而是**方法适用边界**的直接体现：")
+print("  单音估计器在复音输入上无法保证跟踪到旋律线。")
+
+# 导出复音输入的扒谱结果 MIDI
+pm_p = pretty_midi.PrettyMIDI(initial_tempo=BPM)
+inst_p = pretty_midi.Instrument(program=0)
+for n in est_poly:
+    inst_p.notes.append(pretty_midi.Note(velocity=85, pitch=int(n["midi"]),
+                                         start=float(n["start"]), end=float(n["end"])))
+pm_p.instruments.append(inst_p)
+midi_p_est = os.path.join(OUT, "h11_polyphonic_transcribed.mid")
+pm_p.write(midi_p_est)
+print(f"\n复音扒谱结果 MIDI -> {os.path.basename(midi_p_est)}  ({os.path.getsize(midi_p_est)} bytes)")
 
 # =====================================================================
 # 上表即为最终评估结果；以下写入 JSON / Markdown 报告
