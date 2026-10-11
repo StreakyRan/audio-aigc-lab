@@ -34,6 +34,15 @@ import numpy as np
 import soundfile as sf
 import librosa
 import scipy.signal as sps
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
+# 图表中文字体（Windows 常见字体，找不到则回退英文标签）
+for _f in ("Microsoft YaHei", "SimHei", "DengXian"):
+    matplotlib.rcParams["font.sans-serif"] = [_f]
+    matplotlib.rcParams["axes.unicode_minus"] = False
+    break
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "outputs")
@@ -193,19 +202,8 @@ print(f"{'干声':>6} {'—':>6} {stats(dry_note)['peak']:>8.4f} {stats(dry_note
 for r in DIST_TABLE:
     print(f"{r['mode']:>6} {r['drive']:>6.1f} {r['peak']:>8.4f} {r['rms']:>9.5f} "
           f"{r['crest_factor']:>8.3f} {r['thd']:>9.4f}")
-
-print(f"""
-📌 关键观察：
-  · 驱动量↑ → **峰均比（crest factor）下降**（波形被压平）、**THD 上升**（谐波被引入）
-  · hard clip 的 THD 高于 soft clip（硬削波产生更强的奇次谐波）
-  · 失真后必须做**增益补偿**（本文末尾归一化），否则响度暴涨会削波
-
-⚠️ 度量陷阱（本实验踩到并修正）：
-  THD 必须在**纯正弦**上测。若在"类吉他信号"（本身含 7 个谐波）上测，
-  失真后的 THD 反而会**下降**——因为 tanh 压缩改变了基频与谐波的相对占比，
-  再经归一化后比值反而变小。因此本表 THD 列为纯正弦测试结果，
-  音频文件仍用吉他信号（便于听感对比）。
-""")
+print()
+print("注：THD 在纯正弦上测量（吉他和弦本身含谐波，会干扰失真度量）。")
 
 # =====================================================================
 title("3. ② 混响（Reverb）—— 合成脉冲响应 + 卷积")
@@ -269,14 +267,6 @@ for r in REV_TABLE:
           f"{(f'{lr:.2f}' if lr is not None else 'n/a'):>11} "
           f"{(f'{co:.4f}' if co is not None else 'n/a'):>10}")
 
-print("""
-📌 关键观察：
-  · **实测 RT60 与目标完全吻合**（0.4 / 1.5 / 3.0 s 分别测得 ≈0.4 / 1.5 / 3.0）
-    —— 注意：必须从 **IR 本身**测量；若从"干声+湿声"的混合输出测，会测出整段长度而非混响尾音（本实验第一版即如此）
-  · 湿声比越高 → 声道相关性下降（左右 IR 有 3ms 时间差 → 空间感增强）
-  · 混响是把信号"拉长"：输出长度 = 输入长度 + IR 长度 − 1
-""")
-
 # =====================================================================
 title("4. ③④ 延迟与合唱（Delay / Chorus）")
 
@@ -337,12 +327,6 @@ for r in DELAY_TABLE:
 c_st = stereo_stats(cho)
 print()
 print(f"合唱：与干声差异 {diff_metric(dry_chord, cho[:,0])}；声道相关性 {c_st['correlation']}")
-print("""
-📌 关键观察：
-  · 延迟时间决定回声间隔（120/250/450ms 分别对应 slap-back / 常规 / 长延迟）
-  · 反馈越大 → 回声衰减越慢 → RMS 与尾音能量上升
-  · 合唱通过**多个不相干调制延迟**叠加，使声道相关性略降、音色变厚
-""")
 
 # =====================================================================
 title("5. ⑤ 空间声像与立体声展宽（Panning / Stereo Widening）")
@@ -395,13 +379,6 @@ for r in WID_TABLE:
     s_lr = f"{lr:>14.2f}" if lr is not None else "n/a".rjust(14)
     s_co = f"{co:>10.4f}" if co is not None else "n/a".rjust(10)
     print(f"{r['width']:>6.1f} {s_lr} {s_co}")
-
-print("""
-📌 关键观察：
-  · 声像 pan 用**等功率定律**（cos/sin）而不是线性衰减 —— 线性衰减会让中间位置听起来更小
-  · **width=0 时左右完全相同 → 相关性 = 1.0**（完全单声道）；width 增大 → 相关性下降 → 空间感增强
-  · 展宽到 2.0 时声道相关性可能变负（相位风险），实际使用需检查单声道兼容性
-""")
 
 # =====================================================================
 title("6. ⑥ 吉他完整效果链（噪声门 → 失真 → EQ → 合唱 → 延迟 → 混响 → 归一化）")
@@ -490,7 +467,80 @@ print(f"最终输出: 峰值 {stats(wet)['peak']:.4f} | 与干声差异 {diff_me
 print(f"立体声版: 声道相关性 {stereo_stats(wet_st)['correlation']}")
 
 # =====================================================================
-title("7. 汇总")
+# =====================================================================
+title("7. 可视化：效果量化曲线")
+
+# ---- 图 1：失真 —— THD 与峰均比随驱动量的变化（双 Y 轴）----
+fig, ax1 = plt.subplots(figsize=(8, 4.5), dpi=150)
+ax2 = ax1.twinx()
+drives = sorted(set(r["drive"] for r in DIST_TABLE))
+for mode, color in (("soft", "#1f77b4"), ("hard", "#d62728")):
+    thds = [next(r["thd"] for r in DIST_TABLE if r["mode"] == mode and r["drive"] == d) for d in drives]
+    crests = [next(r["crest_factor"] for r in DIST_TABLE if r["mode"] == mode and r["drive"] == d) for d in drives]
+    ax1.plot(drives, thds, "o-", color=color, lw=1.8, label=f"THD（{mode} clip）")
+    ax2.plot(drives, crests, "s--", color=color, lw=1.5, alpha=0.6, label=f"峰均比（{mode} clip）")
+ax1.set_xlabel("驱动量 (drive)")
+ax1.set_ylabel("THD（总谐波失真）", color="#333333")
+ax2.set_ylabel("峰均比 crest factor", color="#666666")
+ax1.set_title("① 失真：驱动量 ↑  →  THD ↑（谐波增加）、峰均比 ↓（波形被压平）")
+ax1.grid(alpha=0.3)
+h1, l1 = ax1.get_legend_handles_labels()
+h2, l2 = ax2.get_legend_handles_labels()
+ax1.legend(h1 + h2, l1 + l2, fontsize=8, loc="center right")
+fig.tight_layout()
+fig.savefig(os.path.join(OUT, "h12_plot_distortion.png"))
+plt.close(fig)
+print(f"  -> h12_plot_distortion.png")
+
+# ---- 图 2：混响 —— Schroeder 能量衰减曲线（RT60 测量标准做法）----
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=150)
+for rt, color in ((0.4, "#2ca02c"), (1.5, "#ff7f0e"), (3.0, "#9467bd")):
+    ir = make_ir(rt, damping=0.4, stereo=False).astype(np.float64)
+    e = ir ** 2
+    cum = np.cumsum(e[::-1])[::-1]                       # Schroeder 反向积分
+    db = 10 * np.log10(cum / (cum[0] + 1e-12) + 1e-12)
+    tt = np.arange(len(db)) / SR
+    ax.plot(tt, db, color=color, lw=1.8, label=f"目标 RT60 = {rt}s")
+ax.axhline(-60, color="gray", ls=":", lw=1)
+ax.text(0.05, -58, "−60 dB（RT60 定义点）", fontsize=8, color="gray")
+ax.set_xlabel("时间 (s)")
+ax.set_ylabel("残余能量 (dB)")
+ax.set_xlim(0, 3.5)
+ax.set_ylim(-75, 3)
+ax.set_title("② 混响：Schroeder 能量衰减曲线（斜率对应 RT60）")
+ax.grid(alpha=0.3)
+ax.legend(fontsize=9, loc="lower left")
+fig.tight_layout()
+fig.savefig(os.path.join(OUT, "h12_plot_reverb_decay.png"))
+plt.close(fig)
+print(f"  -> h12_plot_reverb_decay.png")
+
+# ---- 图 3：声像与立体声展宽 —— 声道相关性 ----
+fig, axes = plt.subplots(1, 2, figsize=(10, 4.2), dpi=150)
+pan_v = [r["pan"] for r in PAN_TABLE if r["lr_level_diff_db"] is not None]
+pan_lr = [r["lr_level_diff_db"] for r in PAN_TABLE if r["lr_level_diff_db"] is not None]
+axes[0].plot(pan_v, pan_lr, "o-", color="#1f77b4")
+axes[0].axhline(0, color="gray", ls=":", lw=1)
+axes[0].set_xlabel("声像位置 pan（-1 全左 → +1 全右）")
+axes[0].set_ylabel("左右电平差 (dB)")
+axes[0].set_title("③ 等功率声像定律")
+axes[0].grid(alpha=0.3)
+
+wid_v = [r["width"] for r in WID_TABLE]
+wid_c = [r["correlation"] for r in WID_TABLE]
+axes[1].plot(wid_v, wid_c, "o-", color="#d62728")
+axes[1].axhline(0, color="gray", ls=":", lw=1)
+axes[1].set_xlabel("展宽 width（Mid/Side）")
+axes[1].set_ylabel("左右声道相关性")
+axes[1].set_title("④ 立体声展宽：width ↑ → 相关性 ↓")
+axes[1].grid(alpha=0.3)
+fig.tight_layout()
+fig.savefig(os.path.join(OUT, "h12_plot_stereo.png"))
+plt.close(fig)
+print(f"  -> h12_plot_stereo.png")
+
+# =====================================================================
+# 上表即为最终结果；以下写入 JSON / Markdown 报告
 
 effects_summary = {
     "distortion": DIST_TABLE,
@@ -511,10 +561,9 @@ md = [
     "# H12 音频效果生成与音色处理 · 实测报告", "",
     "实现 6 个可参数化音频效果，并**量化每个效果对信号的实际改变**。", "",
     "## ① 失真（波形整形）", "",
+    "> THD 在**纯正弦**上测量（吉他和弦本身含谐波，会干扰失真度量）。", "",
     "| 模式 | 驱动 | 峰值 | RMS | 峰均比 | THD |",
     "|---|---|---|---|---|---|",
-    f"| 干声 | — | {stats(dry_note)['peak']:.4f} | {stats(dry_note)['rms']:.5f} | "
-    f"{stats(dry_note)['crest_factor']:.3f} | {thd_estimate(dry_note, f0=NOTE):.4f} |",
 ]
 for r in DIST_TABLE:
     md.append(f"| {r['mode']} | {r['drive']:.1f} | {r['peak']:.4f} | {r['rms']:.5f} | "
@@ -558,6 +607,13 @@ md += ["",
 for name, s, thd in stages:
     md.append(f"| {name} | {s['peak']:.4f} | {s['rms']:.5f} | {s['crest_factor']:.3f} | {thd if thd is not None else '—'} |")
 md += ["",
+       "## 量化曲线", "",
+       "| 图 | 内容 |",
+       "|---|---|",
+       "| `h12_plot_distortion.png` | ① 失真：drive ↑ → THD ↑、峰均比 ↓（双 Y 轴） |",
+       "| `h12_plot_reverb_decay.png` | ② 混响：Schroeder 能量衰减曲线，−60 dB 处即 RT60 |",
+       "| `h12_plot_stereo.png` | ③ 等功率声像定律　④ 立体声展宽 vs 声道相关性 |",
+       "",
        "## 产出", "",
        "```",
        "outputs/h12_input_note.wav / h12_input_chord.wav     输入素材",
@@ -566,6 +622,7 @@ md += ["",
        "outputs/h12_delay_{120,250,450}ms_fb{20,50}.wav      延迟对比",
        "outputs/h12_chorus.wav / h12_pan_*.wav / h12_width_*.wav",
        "outputs/h12_guitar_chain_wet{,_stereo}.wav           完整效果链输出",
+       "outputs/h12_plot_*.png                               量化曲线图",
        "h12_effects_report.json / .md                        全部指标",
        "```",
        ]

@@ -4,9 +4,10 @@
 
 ## ① 失真（波形整形）
 
+> THD 在**纯正弦**上测量（吉他和弦本身含谐波，会干扰失真度量）。
+
 | 模式 | 驱动 | 峰值 | RMS | 峰均比 | THD |
 |---|---|---|---|---|---|
-| 干声 | — | 0.8000 | 0.16223 | 4.931 | 0.5447 |
 | soft | 1.0 | 0.9000 | 0.20879 | 4.311 | 0.0461 |
 | soft | 4.0 | 0.9000 | 0.37962 | 2.371 | 0.2624 |
 | soft | 12.0 | 0.9000 | 0.55915 | 1.610 | 0.3945 |
@@ -78,6 +79,14 @@ Mid/Side 展宽：
 | delay | 0.9000 | 0.21789 | 4.130 | — |
 | reverb | 0.7853 | 0.16092 | 4.880 | — |
 
+## 量化曲线
+
+| 图 | 内容 |
+|---|---|
+| `h12_plot_distortion.png` | ① 失真：drive ↑ → THD ↑、峰均比 ↓（双 Y 轴） |
+| `h12_plot_reverb_decay.png` | ② 混响：Schroeder 能量衰减曲线，−60 dB 处即 RT60 |
+| `h12_plot_stereo.png` | ③ 等功率声像定律　④ 立体声展宽 vs 声道相关性 |
+
 ## 产出
 
 ```
@@ -87,5 +96,6 @@ outputs/h12_reverb_rt{0.4,1.5,3.0}_wet{20,50}.wav    混响对比
 outputs/h12_delay_{120,250,450}ms_fb{20,50}.wav      延迟对比
 outputs/h12_chorus.wav / h12_pan_*.wav / h12_width_*.wav
 outputs/h12_guitar_chain_wet{,_stereo}.wav           完整效果链输出
+outputs/h12_plot_*.png                               量化曲线图
 h12_effects_report.json / .md                        全部指标
 ```
