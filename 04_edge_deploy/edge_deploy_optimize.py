@@ -29,6 +29,29 @@ import glob
 import contextlib
 import tempfile
 
+# 抑制第三方库的冗余告警，保持输出整洁（不影响功能）
+#   · torch.onnx 导出器关于 dynamic_axes 的 UserWarning
+#   · copyreg 的 FutureWarning（torch 内部使用）
+#   · onnxruntime 量化前的 root WARNING
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="torch.onnx")
+warnings.filterwarnings("ignore", category=FutureWarning)
+try:
+    import logging as _logging
+    _logging.getLogger("root").setLevel(_logging.ERROR)
+except Exception:
+    pass
+warnings.filterwarnings("ignore", message=".*dynamic_axes.*")
+warnings.filterwarnings("ignore", message=".*Please consider to run pre-processing.*")
+
+# 抑制 torch 首次导入时的 triton 探测提示（不影响功能）
+try:
+    import logging as _lg
+    _lg.getLogger("torch.utils.flop_counter").setLevel(_lg.ERROR)
+    _lg.getLogger("torch").setLevel(_lg.ERROR)
+except Exception:
+    pass
+
 # ⚠️ 关键坑：onnxruntime 的量化工具内部使用系统临时目录（%TEMP%）。
 #    本机用户名含中文（伍浩然），%TEMP% 路径中的非 ASCII 字符会导致
 #    中间文件路径被错误编码 → FileNotFoundError。
@@ -62,10 +85,12 @@ SR = 22050
 N_MELS, N_FRAMES, N_FFT, HOP = 64, 128, 1024, 256
 N_CLASSES = 4
 
+
 def title(s):
     print("\n" + "=" * 78)
     print(s)
     print("=" * 78)
+
 
 # =====================================================================
 title("1. 模型定义（音频分类网络：Conv2d 处理 log-mel）")
@@ -93,12 +118,13 @@ class AudioSpecNet(nn.Module):
         x = self.gap(x).flatten(1)                         # -> (B,48)
         return self.fc(self.drop(x))
 
+
 model = AudioSpecNet().eval()
 n_params = sum(p.numel() for p in model.parameters())
 print(f"参数量: {n_params:,}")
 
 # =====================================================================
-title("2. 准备真实音频样本（复用仓库里的音频）")
+title("2. 准备音频样本（复用仓库里的音频）")
 
 REPO = r"C:\Users\伍浩然\OneDrive\Desktop\ForInterview\SkillsetLab\github_repo\audio-aigc-lab"
 pats = [
@@ -165,7 +191,7 @@ import onnx
 import onnxruntime as ort
 
 onnx_fp32 = os.path.join(OUT, "model_fp32.onnx")
-with contextlib.redirect_stdout(io.StringIO()):     # 静音 torch.onnx 导出过程的冗余输出
+with contextlib.redirect_stdout(io.StringIO()):      # 静音 torch.onnx 导出过程的进度输出
     torch.onnx.export(
         model, dummy,
         onnx_fp32,
@@ -241,7 +267,7 @@ tmp_out = os.path.join(tmpdir, "model_int8.onnx")
 
 # 坑 1：torch 导出的 ONNX 可能把权重存成「外部数据文件」，量化工具读不了
 #      → 重新导出为单文件（external_data=False）
-with contextlib.redirect_stdout(io.StringIO()):     # 静音 torch.onnx 导出过程的冗余输出
+with contextlib.redirect_stdout(io.StringIO()):      # 静音 torch.onnx 导出过程的进度输出
     torch.onnx.export(
         model, dummy, tmp_in,
         input_names=["mel"], output_names=["logits"],
@@ -287,7 +313,7 @@ print("\n说明：本模型未训练（随机权重），此处验证的是「�
 print("      即量化是否引入了破坏性误差——这是部署环节的核心验证项。")
 
 # =====================================================================
-title("8. 简要对比")
+title("8. 汇总对比表")
 
 rows = [
     ("PyTorch fp32", pt_size, pt_ms, 1.0, "—"),
@@ -309,7 +335,7 @@ print(f"  体积最小: {best_small[0]}  ({best_small[1]:.3f} MB)")
 print(f"  速度最快: {best_fast[0]}  ({best_fast[2]:.3f} ms)")
 
 # =====================================================================
-# 上表即为最终结果；以下写入 JSON 报告
+# 上表即为最终结果；以下写入 JSON / Markdown 报告
 
 report = {
     "model_params": n_params,
@@ -323,7 +349,6 @@ report = {
                     "pytorch_vs_onnx_int8": round(agree8, 4)},
     "size_reduction_int8_pct": round(sz8 / sz32 * 100, 2),
 }
-
 
 with open(os.path.join(HERE, "h10_deploy_report.json"), "w", encoding="utf-8") as f:
     json.dump(report, f, ensure_ascii=False, indent=2)
