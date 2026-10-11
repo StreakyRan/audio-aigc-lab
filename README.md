@@ -1,6 +1,6 @@
 # audio-aigc-lab
 
-**音频信号分析 · 特征工程 · 数据清洗流水线 · 音乐生成与源分离实测**
+**音频信号分析 · 数据清洗流水线 · 音乐生成与音轨分离 · 端侧部署与量化 · 音高识别与 MIDI 扒谱 · 音频效果生成 · LoRA 参数高效微调**
 
 [![Python](https://img.shields.io/badge/Python-3.13-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.11-EE4C2C?logo=pytorch&logoColor=white)](https://pytorch.org/)
