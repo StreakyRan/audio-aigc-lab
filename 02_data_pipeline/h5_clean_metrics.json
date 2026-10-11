@@ -6,8 +6,8 @@
     "reject": 5,
     "duration_in": 180.4,
     "duration_out": 180.4,
-    "elapsed_sec": 4.99,
-    "throughput_x_realtime": 36.18,
+    "elapsed_sec": 4.89,
+    "throughput_x_realtime": 36.87,
     "reject_reasons": {
       "hard_clipping": 2,
       "excessive_silence": 2,
