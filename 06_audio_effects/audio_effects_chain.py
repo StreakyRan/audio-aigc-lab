@@ -41,12 +41,10 @@ os.makedirs(OUT, exist_ok=True)
 SR = 44100
 rng = np.random.default_rng(42)
 
-
 def title(s):
     print("\n" + "=" * 80)
     print(s)
     print("=" * 80)
-
 
 # =====================================================================
 # 度量工具
@@ -112,7 +110,6 @@ def diff_metric(a, b):
     an = a / (np.max(np.abs(a)) + 1e-12)
     bn = b / (np.max(np.abs(b)) + 1e-12)
     return round(float(np.sqrt(np.mean((an - bn) ** 2))), 5)
-
 
 # =====================================================================
 title("1. 准备输入素材（用真实吉他/合成信号）")
@@ -493,7 +490,7 @@ print(f"最终输出: 峰值 {stats(wet)['peak']:.4f} | 与干声差异 {diff_me
 print(f"立体声版: 声道相关性 {stereo_stats(wet_st)['correlation']}")
 
 # =====================================================================
-title("7. 汇总与工程结论")
+title("7. 汇总")
 
 effects_summary = {
     "distortion": DIST_TABLE,
@@ -509,27 +506,6 @@ effects_summary = {
 with open(os.path.join(HERE, "h12_effects_report.json"), "w", encoding="utf-8") as f:
     json.dump(effects_summary, f, ensure_ascii=False, indent=2)
 
-print(f"""
-关键结果：
-
-1. 实现 6 个可参数化音频效果：失真（soft/hard + 驱动 + 音色）、卷积混响（合成 IR + 阻尼 + 预延迟）、
-   反馈延迟（ping-pong 立体声）、合唱（多 LFO 调制延迟）、等功率声像、Mid/Side 立体声展宽。
-2. **失真量化**：驱动量从 1.0 → 12.0 时，**峰均比（crest factor）由 {DIST_TABLE[0]['crest_factor']:.2f} 降到 {DIST_TABLE[-1]['crest_factor']:.2f}**，
-   **THD 由 {DIST_TABLE[0]['thd']:.3f} 升到 {DIST_TABLE[-1]['thd']:.3f}** —— 用数字证明了"失真变脏"。
-3. **混响量化**：合成 IR 的实测 RT60 与目标**完全吻合**（0.4 / 1.5 / 3.0 s → 实测 ≈0.4 / 1.5 / 3.0 s）；
-   湿声比升高使**声道相关性下降**（空间感增强的量化指标）。
-4. **空间量化**：等功率声像从「全左（右声道静音）」连续过渡到「全右（左声道静音）」，中间位置左右平衡；
-   Mid/Side 展宽使声道相关性从 **1.0（完全单声道）单调下降**，过大时趋负（相位风险）。
-5. **完整效果链**：噪声门 → 失真 → 三段 EQ → 合唱 → 延迟 → 混响 → 归一化，
-   逐阶段输出峰值/RMS/峰均比/THD，验证每一步的实际作用。
-
-工程要点：
-· **失真后必须做增益补偿**：tanh/clip 会显著提升 RMS，不归一化会直接削波
-· **混响用卷积而非简单叠延迟**：IR 的长度决定输出长度，IR 的左右时间差决定空间宽度
-· **声像用等功率定律**（cos/sin）：线性衰减会让中间位置听感变小
-· **展宽要检查单声道兼容性**：width 过大时左右相关性趋负，单声道合并会抵消
-· 效果链的**顺序很关键**：失真应在延迟/混响之前（否则混响尾音也会被失真），EQ 放在失真后用于塑形
-""")
 
 md = [
     "# H12 音频效果生成与音色处理 · 实测报告", "",
@@ -582,12 +558,6 @@ md += ["",
 for name, s, thd in stages:
     md.append(f"| {name} | {s['peak']:.4f} | {s['rms']:.5f} | {s['crest_factor']:.3f} | {thd if thd is not None else '—'} |")
 md += ["",
-       "## 工程要点", "",
-       "1. **失真后必须做增益补偿**：tanh/clip 显著提升 RMS，不归一化会直接削波。",
-       "2. **混响用卷积而非简单叠延迟**：IR 长度决定输出长度，左右时间差决定空间宽度。",
-       "3. **声像用等功率定律**（cos/sin）：线性衰减会让中间位置听感变小。",
-       "4. **展宽要检查单声道兼容性**：width 过大时左右相关性趋负，单声道合并会抵消。",
-       "5. **效果链顺序很关键**：失真在延迟/混响之前（否则尾音也被失真），EQ 放在失真后用于塑形。", "",
        "## 产出", "",
        "```",
        "outputs/h12_input_note.wav / h12_input_chord.wav     输入素材",

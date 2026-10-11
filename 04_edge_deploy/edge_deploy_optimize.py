@@ -22,9 +22,11 @@ H10 · 模型轻量化与端侧部署优化
 """
 import os
 import sys
+import io
 import time
 import json
 import glob
+import contextlib
 import tempfile
 
 # ⚠️ 关键坑：onnxruntime 的量化工具内部使用系统临时目录（%TEMP%）。
@@ -60,12 +62,10 @@ SR = 22050
 N_MELS, N_FRAMES, N_FFT, HOP = 64, 128, 1024, 256
 N_CLASSES = 4
 
-
 def title(s):
     print("\n" + "=" * 78)
     print(s)
     print("=" * 78)
-
 
 # =====================================================================
 title("1. 模型定义（音频分类网络：Conv2d 处理 log-mel）")
@@ -92,7 +92,6 @@ class AudioSpecNet(nn.Module):
         x = self.pool(self.act(self.bn3(self.conv3(x))))   # -> (B,48,8,16)
         x = self.gap(x).flatten(1)                         # -> (B,48)
         return self.fc(self.drop(x))
-
 
 model = AudioSpecNet().eval()
 n_params = sum(p.numel() for p in model.parameters())
@@ -166,15 +165,16 @@ import onnx
 import onnxruntime as ort
 
 onnx_fp32 = os.path.join(OUT, "model_fp32.onnx")
-torch.onnx.export(
-    model, dummy,
-    onnx_fp32,
-    input_names=["mel"],
-    output_names=["logits"],
-    dynamic_axes={"mel": {0: "batch"}, "logits": {0: "batch"}},
-    opset_version=21,               # 用高版本避免 ONNX 版本转换（低版本会触发 axes 属性转换 bug）
-    do_constant_folding=True,       # 常量折叠：图优化
-)
+with contextlib.redirect_stdout(io.StringIO()):     # 静音 torch.onnx 导出过程的冗余输出
+    torch.onnx.export(
+        model, dummy,
+        onnx_fp32,
+        input_names=["mel"],
+        output_names=["logits"],
+        dynamic_axes={"mel": {0: "batch"}, "logits": {0: "batch"}},
+        opset_version=21,               # 用高版本避免 ONNX 版本转换（低版本会触发 axes 属性转换 bug）
+        do_constant_folding=True,       # 常量折叠：图优化
+    )
 sz32 = os.path.getsize(onnx_fp32) / 1024 / 1024
 
 sess32 = ort.InferenceSession(onnx_fp32, providers=["CPUExecutionProvider"])
@@ -241,12 +241,13 @@ tmp_out = os.path.join(tmpdir, "model_int8.onnx")
 
 # 坑 1：torch 导出的 ONNX 可能把权重存成「外部数据文件」，量化工具读不了
 #      → 重新导出为单文件（external_data=False）
-torch.onnx.export(
-    model, dummy, tmp_in,
-    input_names=["mel"], output_names=["logits"],
-    dynamic_axes={"mel": {0: "batch"}, "logits": {0: "batch"}},
-    opset_version=21, do_constant_folding=True, external_data=False,
-)
+with contextlib.redirect_stdout(io.StringIO()):     # 静音 torch.onnx 导出过程的冗余输出
+    torch.onnx.export(
+        model, dummy, tmp_in,
+        input_names=["mel"], output_names=["logits"],
+        dynamic_axes={"mel": {0: "batch"}, "logits": {0: "batch"}},
+        opset_version=21, do_constant_folding=True, external_data=False,
+    )
 # 坑 2：形状推断可能与已有 value_info 冲突 → 去掉中间层 value_info 再量化
 _m = onnx.load(tmp_in)
 del _m.graph.value_info[:]
@@ -286,7 +287,7 @@ print("\n说明：本模型未训练（随机权重），此处验证的是「�
 print("      即量化是否引入了破坏性误差——这是部署环节的核心验证项。")
 
 # =====================================================================
-title("8. 汇总对比表")
+title("8. 简要对比")
 
 rows = [
     ("PyTorch fp32", pt_size, pt_ms, 1.0, "—"),
@@ -308,7 +309,7 @@ print(f"  体积最小: {best_small[0]}  ({best_small[1]:.3f} MB)")
 print(f"  速度最快: {best_fast[0]}  ({best_fast[2]:.3f} ms)")
 
 # =====================================================================
-title("9. 结论与工程取舍")
+# 上表即为最终结果；以下写入 JSON 报告
 
 report = {
     "model_params": n_params,
@@ -323,34 +324,6 @@ report = {
     "size_reduction_int8_pct": round(sz8 / sz32 * 100, 2),
 }
 
-print(f"""
-关键结论（⚠️ 与"量化一定更快"的直觉相反，以实测为准）：
-
-1. 本实验条件下最快的方案是 **ONNX fp32**：相对 PyTorch 加速 {pt_ms/ms32:.2f}x，体积缩到 {sz32/pt_size*100:.1f}%。
-   —— 说明**图优化 + 算子融合本身就是最大的收益来源**，不必先上量化。
-
-2. **int8 动态量化在本场景反而变慢**（{ms8:.1f} ms，相对 PyTorch {pt_ms/ms8:.2f}x），
-   体积也没有优势（fp32 的 {sz8/sz32*100:.0f}%）。根本原因是**模型太小**（仅 {n_params:,} 参数）：
-   · 动态量化引入的"运行时反量化"开销 > 权重位宽降低带来的收益
-   · 小模型的瓶颈是算子调度/框架开销，而不是权重访存量
-
-3. **fp16 在本机 CPU 上不提速**（{ms16:.1f} ms）：多数 x86 CPU 没有 fp16 的 SIMD 加速，
-   需在运行时把 fp16 转回 fp32 再算，反而更慢。fp16 的价值主要在 **GPU / 支持 fp16 的端侧芯片**。
-
-4. 部署验证的**正确做法**：不能只看"体积/速度"，必须同时验证
-   · **输出一致性**：int8 与 fp32 最大差异 {d8:.2e}，余弦相似度 {c8:.6f}
-   · **下游指标**：预测一致率 {agree8*100:.1f}%（本模型未训练，验证的是转换一致性）
-""")
-
-print(f"""
-📌 工程结论：
-
-"我在端侧部署优化上做过实测：把 PyTorch 模型导出 ONNX 后，借助常量折叠与算子融合拿到 {pt_ms/ms32:.1f}x 加速；
-但进一步做 fp16 和 int8 动态量化时，发现**它们在这个规模（{n_params:,} 参数）上反而更慢**——
-因为动态量化的运行时反量化开销超过了权重位宽降低的收益，而小模型的瓶颈是框架调度开销。
-所以部署优化不能套模板，必须**先 profile 再决定优化手段**：
-小模型优先做图优化，量化要到大模型/显存受限场景才划算。"
-""")
 
 with open(os.path.join(HERE, "h10_deploy_report.json"), "w", encoding="utf-8") as f:
     json.dump(report, f, ensure_ascii=False, indent=2)

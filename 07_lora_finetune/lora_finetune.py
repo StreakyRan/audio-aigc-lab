@@ -34,6 +34,14 @@ except Exception:
 
 import numpy as np
 import torch
+
+# 抑制 torch.onnx 导出过程的冗余日志，保持输出整洁
+import logging as _logging
+_logging.getLogger("torch.onnx").setLevel(_logging.ERROR)
+try:
+    torch._logging.set_logs(onnx=50)
+except Exception:
+    pass
 import torch.nn as nn
 import torch.nn.functional as F
 import librosa
@@ -48,16 +56,13 @@ SR = 22050
 N_MELS, N_FRAMES = 64, 128
 N_CLASSES = 4
 
-
 def title(s):
     print("\n" + "=" * 78)
     print(s)
     print("=" * 78)
 
-
 def peak_gb():
     return torch.cuda.max_memory_allocated() / 1024**3 if DEVICE == "cuda" else 0.0
-
 
 # =====================================================================
 title("0. 硬件与显存约束")
@@ -84,7 +89,6 @@ if not files:
     files = [librosa.ex("choice"), librosa.ex("trumpet"), librosa.ex("sweetwaltz")]
 print(f"  找到 {len(files)} 个音频文件")
 
-
 def load_feat(path):
     y, _ = librosa.load(path, sr=SR, mono=True, duration=10.0)
     m = librosa.feature.melspectrogram(y=y, sr=SR, n_fft=1024, hop_length=256, n_mels=N_MELS)
@@ -94,7 +98,6 @@ def load_feat(path):
     else:
         m = m[:, :N_FRAMES]
     return m.astype(np.float32)
-
 
 feats, labels = [], []
 for i, f in enumerate(files):
@@ -128,17 +131,14 @@ loader_pre = torch.utils.data.DataLoader(
 loader_ft = torch.utils.data.DataLoader(
     torch.utils.data.TensorDataset(Xft, yft), batch_size=4, shuffle=True)   # 小样本微调
 
-
 def evaluate(model, Xe, ye):
     model.eval()
     with torch.no_grad():
         pred = model(Xe.to(DEVICE)).argmax(1).cpu()
     return (pred == ye).float().mean().item()
 
-
 # =====================================================================
 title("2. 模型与 LoRA 实现")
-
 
 class AudioCNN(nn.Module):
     def __init__(self, n_classes=N_CLASSES):
@@ -160,7 +160,6 @@ class AudioCNN(nn.Module):
         x = self.pool(self.act(self.bn3(self.conv3(x))))
         return self.fc(self.gap(x).flatten(1))
 
-
 class LoRALinear(nn.Module):
     """h = W·x + (B·A·x) * (alpha/r)；A 用 Kaiming，B 用零初始化 → ΔW 初始为 0"""
     def __init__(self, base, r=8, alpha=16):
@@ -175,7 +174,6 @@ class LoRALinear(nn.Module):
 
     def forward(self, x):
         return self.base(x) + (x @ self.A.T @ self.B.T) * self.scale
-
 
 class LoRAConv2d(nn.Module):
     """out = Conv(x, W) + scale * up(down(x))；down/up 为 1×1 低秩卷积"""
@@ -193,7 +191,6 @@ class LoRAConv2d(nn.Module):
     def forward(self, x):
         return self.base(x) + self.up(self.down(x)) * self.scale
 
-
 def apply_lora(module, r=8, alpha=16, targets=("conv1", "conv2", "conv3", "fc")):
     """① 冻结整网 ② 把 targets 指定的层换成 LoRA 包装（只有 LoRA 参数可训练）"""
     for p in module.parameters():
@@ -208,12 +205,10 @@ def apply_lora(module, r=8, alpha=16, targets=("conv1", "conv2", "conv3", "fc"))
             apply_lora(child, r, alpha, targets)
     return module
 
-
 def count_params(m):
     total = sum(p.numel() for p in m.parameters())
     train = sum(p.numel() for p in m.parameters() if p.requires_grad)
     return total, train
-
 
 # =====================================================================
 title("3. 阶段 0：预训练（得到基座权重）")
@@ -384,27 +379,6 @@ with open(os.path.join(HERE, "h13_lora_report.json"), "w", encoding="utf-8") as 
 
 delta_ft = (acc_lora_ft - acc_full_ft) * 100
 delta_va = (acc_lora_va - acc_full_va) * 100
-
-print(f"""
-关键结果：
-
-1. **参数量**：LoRA（r=8）可训练参数 {l_train:,}，仅占全参数微调的 **{l_train/f_total*100:.2f}%**
-   —— 减少约 **{f_total/l_train:.0f} 倍**，这就是参数高效微调的核心价值。
-2. **效果**：微调集准确率 LoRA {acc_lora_ft*100:.1f}% vs 全参数 {acc_full_ft*100:.1f}%（差 {delta_ft:+.1f} 个百分点）；
-   验证集 LoRA {acc_lora_va*100:.1f}% vs 全参数 {acc_full_va*100:.1f}%（差 {delta_va:+.1f} 个百分点）。
-3. **rank 消融**：r 从 2 → 16，可训练参数线性增长（{RANK_TABLE[0]['trainable']:,} → {RANK_TABLE[-1]['trainable']:,}），
-   但验证准确率并非单调提升 → **存在性价比拐点，rank 不是越大越好**。
-4. **LoRA 的工程优势**：只训练 {l_train:,} 个参数意味着**优化器状态和梯度显存大幅降低**，
-   在单卡小显存场景下这往往比「效果上限」更重要。
-
-⚠️ 本硬件的真实边界：
-   实测 MusicGen-small（586.9 M）在本机 4 GB 显存上**无法微调**：
-     fp16 加载 → 占 1.16 GB（剩 2.04 GB）
-     fp32 加载 → 占 2.20 GB（剩仅 0.39 GB）
-   即使全部参数冻结、只做前向也不够。若要在消费级显卡上微调生成模型，需要：
-     4-bit/8-bit 量化权重（QLoRA）+ gradient checkpointing + CPU offload，或直接用云端算力。
-   这个"先测边界、再选方案"的过程本身就是工程能力。
-""")
 
 md = [
     "# H13 LoRA 参数高效微调实测 · 报告", "",
