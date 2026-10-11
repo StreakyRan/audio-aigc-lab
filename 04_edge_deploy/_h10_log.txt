@@ -1,0 +1,125 @@
+﻿python : C:\Users\���Ȼ\OneDrive\Desktop\ForInterview\SkillsetLab\github_repo\audio-aigc-lab\04_edge_deploy\edge_deploy_
+optimize.py:169: UserWarning: # 'dynamic_axes' is not recommended when dynamo=True, and may lead to 
+'torch._dynamo.exc.UserError: Constraints violated.' Supply the 'dynamic_shapes' argument instead if export is 
+unsuccessful.
+所在位置 行:3 字符: 1
++ python edge_deploy_optimize.py 2>&1 | Where-Object { $_ -notmatch 'Ca ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (C:\Users\���Ȼ\O...s unsuccessful.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+W1011 15:27:24.444000 9408 site-packages\torch\utils\flop_counter.py:29] triton not found; flop counting will not work 
+for triton kernels
+D:\Pycharm\Python3.13.5\Lib\copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use 
+`isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+  return cls.__new__(cls, *args)
+C:\Users\���Ȼ\OneDrive\Desktop\ForInterview\SkillsetLab\github_repo\audio-aigc-lab\04_edge_deploy\edge_deploy_optimize.
+py:244: UserWarning: # 'dynamic_axes' is not recommended when dynamo=True, and may lead to 
+'torch._dynamo.exc.UserError: Constraints violated.' Supply the 'dynamic_shapes' argument instead if export is 
+unsuccessful.
+D:\Pycharm\Python3.13.5\Lib\copyreg.py:99: FutureWarning: `isinstance(treespec, LeafSpec)` is deprecated, use 
+`isinstance(treespec, TreeSpec) and treespec.is_leaf()` instead.
+  return cls.__new__(cls, *args)
+WARNING:root:Please consider to run pre-processing before quantization. Refer to example: 
+https://github.com/microsoft/onnxruntime-inference-examples/blob/main/quantization/image_classification/cpu/ReadMe.md 
+
+==============================================================================
+1. 模型定义（音频分类网络：Conv2d 处理 log-mel）
+==============================================================================
+参数量: 19,060
+
+==============================================================================
+2. 准备真实音频样本（复用仓库里的音频）
+==============================================================================
+找到 23 个音频
+输入张量: (16, 1, 64, 128) = (样本, 通道, mel, 帧)
+单样本输入: (1, 1, 64, 128)
+
+==============================================================================
+3. ① PyTorch fp32 基线
+==============================================================================
+  模型文件      : model_pytorch.pt  0.080 MB
+  推理延迟      : 8.600 ms / 批次（16 条）
+  单样本延迟    : 0.538 ms
+  输出形状      : (16, 4)
+
+==============================================================================
+4. ② 导出 ONNX fp32
+==============================================================================
+  文件大小      : 0.015 MB   （对比 PyTorch 0.080 MB）
+  推理延迟      : 1.417 ms / 批次
+  相对 PyTorch  : 6.07x
+  输出一致性    : 最大差异 1.91e-06 | 余弦相似度 1.000000
+
+==============================================================================
+5. ③ ONNX fp16（半精度）
+==============================================================================
+  文件大小      : 0.051 MB   （相对 fp32 332.4%）
+  推理延迟      : 2.354 ms / 批次
+  输出一致性    : 最大差异 2.23e-03 | 余弦相似度 1.000000
+
+==============================================================================
+6. ④ ONNX int8 动态量化（端侧最常用）
+==============================================================================
+  [提示] 因路径含非 ASCII 字符与形状推断限制，量化在纯 ASCII 目录、去 value_info 后完成
+  文件大小      : 0.032 MB   （相对 fp32 204.4%）
+  推理延迟      : 23.373 ms / 批次
+  相对 PyTorch  : 0.37x
+  输出一致性    : 最大差异 6.09e-02 | 余弦相似度 0.999935
+
+==============================================================================
+7. 精度保持验证（分类结果一致性）
+==============================================================================
+  PyTorch vs ONNX fp32  预测一致率: 100.0%
+  PyTorch vs ONNX int8  预测一致率: 100.0%
+
+说明：本模型未训练（随机权重），此处验证的是「部署转换前后的一致性」，
+      即量化是否引入了破坏性误差——这是部署环节的核心验证项。
+
+==============================================================================
+8. 汇总对比表
+==============================================================================
+版本                 体积(MB)     延迟(ms)      相对加速         输出最大差异
+------------------------------------------------------------------
+PyTorch fp32        0.080      8.600      1.00x              —
+ONNX fp32           0.015      1.417      6.07x       1.91e-06
+ONNX fp16           0.051      2.354      3.65x       2.23e-03
+ONNX int8           0.032     23.373      0.37x       6.09e-02
+
+  体积最小: ONNX fp32  (0.015 MB)
+  速度最快: ONNX fp32  (1.417 ms)
+
+==============================================================================
+9. 结论与工程取舍
+==============================================================================
+
+关键结论（⚠️ 与"量化一定更快"的直觉相反，以实测为准）：
+
+1. 本实验条件下最快的方案是 **ONNX fp32**：相对 PyTorch 加速 6.07x，体积缩到 19.3%。
+   —— 说明**图优化 + 算子融合本身就是最大的收益来源**，不必先上量化。
+
+2. **int8 动态量化在本场景反而变慢**（23.4 ms，相对 PyTorch 0.37x），
+   体积也没有优势（fp32 的 204%）。根本原因是**模型太小**（仅 19,060 参数）：
+   · 动态量化引入的"运行时反量化"开销 > 权重位宽降低带来的收益
+   · 小模型的瓶颈是算子调度/框架开销，而不是权重访存量
+
+3. **fp16 在本机 CPU 上不提速**（2.4 ms）：多数 x86 CPU 没有 fp16 的 SIMD 加速，
+   需在运行时把 fp16 转回 fp32 再算，反而更慢。fp16 的价值主要在 **GPU / 支持 fp16 的端侧芯片**。
+
+4. 部署验证的**正确做法**：不能只看"体积/速度"，必须同时验证
+   · **输出一致性**：int8 与 fp32 最大差异 6.09e-02，余弦相似度 0.999935
+   · **下游指标**：预测一致率 100.0%（本模型未训练，验证的是转换一致性）
+
+
+📌 工程结论（可直接用于面试）：
+
+"我在端侧部署优化上做过实测：把 PyTorch 模型导出 ONNX 后，借助常量折叠与算子融合拿到 6.1x 加速；
+但进一步做 fp16 和 int8 动态量化时，发现**它们在这个规模（19,060 参数）上反而更慢**——
+因为动态量化的运行时反量化开销超过了权重位宽降低的收益，而小模型的瓶颈是框架调度开销。
+所以部署优化不能套模板，必须**先 profile 再决定优化手段**：
+小模型优先做图优化，量化要到大模型/显存受限场景才划算。"
+
+==============================================================================
+[done] 模型文件 -> C:\Users\伍浩然\OneDrive\Desktop\ForInterview\SkillsetLab\github_repo\audio-aigc-lab\04_edge_deploy\outputs
+[done] 报告 -> h10_deploy_report.md / h10_deploy_report.json
+==============================================================================
